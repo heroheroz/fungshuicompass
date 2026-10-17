@@ -2067,31 +2067,33 @@ function naqiReading(h, t, d) {
       return `<button type="button" data-nqtoggle="${i}" title="${tr('撳一下切換正／零', 'Tap to switch 正 / 零')}" class="nq-cell ${z ? 'zheng' : 'ling'}${main ? ' main' : ''}${NQ.custom && z !== naqiDefault(P)[i] ? ' custom' : ''}"><span class="d"><span>${tr(TRI[i].dirZh, TRI[i].dir)} <span class="zh">${TRI[i].zh}</span></span></span><span class="n">${n}</span><span class="zl">${z ? '正' : '零'}</span></button>`;
     }).join('') + `</div>
     <div class="nq-tools"><span class="note">${tr(`撳格仔可切換正／零，每個運各自儲存。${NQ.custom ? '此運已自訂。' : ''}`, `Tap a square to switch it between 正 and 零. Each period keeps its own layout.${NQ.custom ? ' This period is customised.' : ''}`)}</span>${NQ.custom ? `<button type="button" class="btn" data-nqreset="1">${tr('還原預設', 'Restore default')}</button>` : ''}</div>
-    <div class="legend"><span><b class="t-nz">${tr('藍「正」', 'Blue 正')}</b>${tr('：正神方，宜山宜靜，忌見水及開口', ': Zheng sectors want mountains and calm, not water or openings')}</span><span><b class="t-n1">${tr('紅「零」', 'Red 零')}</b>${tr('：零神方，宜水宜動，宜門窗納氣', ': Ling sectors want water, movement, doors and windows')}</span><span>· ${tr('粗框為本運正位', 'thick border: this period\'s main pair')} · ${tr('南方在上', 'South on top')}</span></div>
+    <div class="legend"><span><b class="t-nz">${tr('藍「正」', 'Blue 正')}</b>${tr('：當運正神，立極點收到呢個方位嘅氣為吉', ': timely 正神 qi, lucky when a spot draws air from here')}</span><span><b class="t-n1">${tr('紅「零」', 'Red 零')}</b>${tr('：失運零神，收到呢個方位嘅氣為凶', ': untimely 零神 qi, unlucky to draw air from here')}</span><span>· ${tr('粗框為本運正位', 'thick border: this period\'s main pair')} · ${tr('南方在上', 'South on top')}</span></div>
   </section>`;
+  // 立極 at the spot, the line to the opening (入氣口) lands on a Lo Shu number: 正神 qi is lucky, 零神 qi is not
   const open = (i, what) => NQ.zheng[i]
-    ? tr(`${what}開在正神方，為「正神下水」，主損丁破財。宜少開、拉簾，或在此方擺放穩重實物。`, `This ${what} opens onto a 正神 sector ("正神下水"), traditionally a drain on health and money. Keep it closed or curtained, or place something solid and heavy on this side.`)
-    : tr(`${what}開在零神方，得以納入當運旺氣，主進財。宜多開、保持明亮通爽，見水更佳。`, `This ${what} opens onto a 零神 sector and draws in the period's prosperous qi for wealth. Open it often and keep it bright; a view of water helps.`);
-  // an opening in 零 or a solid/quiet use in 正 makes that palace's trigram 得運; the reverse makes it 失運
+    ? tr(`${what}喺${LOSHU[i]}嘅方位，收${LOSHU[i]}之氣，${pn}運屬正神，係當運旺氣，主吉。宜多開、保持通爽明亮。`, `This ${what} lies on ${LOSHU[i]}, so it draws ${LOSHU[i]} qi, a timely 正神 in period ${P}. Open it often and keep it bright.`)
+    : tr(`${what}喺${LOSHU[i]}嘅方位，收${LOSHU[i]}之氣，${pn}運屬零神，係失運之氣，主凶。宜少開、拉簾，或喺入氣位置加屏風、玄關化解。`, `This ${what} lies on ${LOSHU[i]}, so it draws ${LOSHU[i]} qi, an untimely 零神 in period ${P}. Keep it closed or curtained, or put a screen at the opening.`);
+  // drawing 正神 qi puts that palace's trigram 得運; drawing 零神 qi puts it 失運
   const luck = (i, ok) => { const G = GUA_LUCK[i]; return `<p><span class="pill ${ok ? 'good' : 'warn'}">${G.g}${tr('卦', ' trigram')} ${ok ? tr('得運', 'in luck 得運') : tr('失運', 'out of luck 失運')}</span> ${tr(ok ? '主' : '易應：', ok ? 'Brings ' : 'Watch for ')}${pick(ok ? G.win : G.lose)}${tr('。', '.')}</p>`; };
   html += `<section class="block"><h2>${tr(`以「${esc(t.label)}」為中心`, `Reading from ${esc(t.label)}`)}</h2>`;
   const doorB = bearing(t.pt, S.door), ds = sec8(doorB);
-  html += `<div class="item ${NQ.zheng[ds] ? 'bad' : 'good'}"><div class="head"><strong>${tr('大門', 'Front door')}</strong>${nqB(LOSHU[ds], NQ.zheng[ds])}<span class="pill ${NQ.zheng[ds] ? 'warn' : 'good'}">${role(ds)}${mainTag(ds)}</span></div>
+  html += `<div class="item ${NQ.zheng[ds] ? 'good' : 'bad'}"><div class="head"><strong>${tr('大門', 'Front door')}</strong>${nqB(LOSHU[ds], NQ.zheng[ds])}<span class="pill ${NQ.zheng[ds] ? 'good' : 'warn'}">${role(ds)}${mainTag(ds)}</span></div>
     <p class="meta">${tr(`位於${d.who}的${dirLabel(doorB)}`, `Lies ${dirLabel(doorB)} of ${d.who}`)} · ${pal(ds)}</p>
-    <p>${open(ds, tr('大門', 'door'))}</p>${luck(ds, !NQ.zheng[ds])}</div>`;
+    <p>${open(ds, tr('大門', 'door'))}</p>${luck(ds, NQ.zheng[ds])}</div>`;
   if (t.key === 'bed' || t.key === 'sofa') {
-    const ls = sec8(bearing(S.center, t.pt));
-    html += `<div class="item ${NQ.zheng[ls] ? 'good' : 'warn'}"><div class="head"><strong>${t.key === 'bed' ? tr('床位', 'Bed position') : tr('沙發位', 'Sofa position')}</strong>${nqB(LOSHU[ls], NQ.zheng[ls])}<span class="pill ${NQ.zheng[ls] ? 'good' : 'warn'}">${role(ls)}${mainTag(ls)}</span></div>
-      <p class="meta">${tr(`位於屋的${pal(ls)}`, `In the house's ${pal(ls)}`)}</p>
-      <p>${NQ.zheng[ls] ? tr('坐於正神方，得靠得穩，利人丁健康及休息。', 'It sits in a 正神 sector, which gives support and calm, good for health and rest.') : tr('位於零神方，此方宜動宜開，不利長時間靜坐或睡眠。可在背後加實牆或高身傢具作靠。', 'It sits in a 零神 sector, which suits movement and openness more than rest. A solid wall or tall furniture behind it gives support.')}</p>${luck(ls, NQ.zheng[ls])}</div>`;
+    const E = entryOf(t.key), ls = sec8(bearing(t.pt, E.pt)), z = NQ.zheng[ls], n = LOSHU[ls];
+    html += `<div class="item ${z ? 'good' : 'bad'}"><div class="head"><strong>${t.key === 'bed' ? tr('床立極收氣', 'Qi reaching the bed') : tr('沙發立極收氣', 'Qi reaching the sofa')}</strong>${nqB(n, z)}<span class="pill ${z ? 'good' : 'warn'}">${role(ls)}${mainTag(ls)}</span></div>
+      <p class="meta">${tr(`以${t.label}為立極點，${pick(E.name)}為入氣口，線落${n}（${pal(ls)}）`, `With the ${t.label.toLowerCase()} as the taiji point and the ${pick(E.name).toLowerCase()} as the qi entrance, the line lands on ${n} (${pal(ls)})`)}</p>
+      <p>${z ? tr(`收${n}之氣，${pn}運屬正神旺氣，${t.key === 'bed' ? '睡得安穩，利健康' : '坐得舒服，利人緣財運'}，評分高。`, `It draws ${n} qi, timely 正神 in period ${P}: ${t.key === 'bed' ? 'restful sleep and good health' : 'comfort, goodwill and income'}. This scores well.`)
+        : tr(`收${n}之氣，${pn}運屬零神失運之氣，${t.key === 'bed' ? '易睡得唔好、影響健康' : '坐落易煩躁、破財'}，評分低。可考慮移位令入氣線落喺正神方，或者喺入氣位置加屏風。`, `It draws ${n} qi, untimely 零神 in period ${P}: ${t.key === 'bed' ? 'poor sleep and health' : 'restlessness and money leaks'}. This scores low. Move it so the line lands on a 正神 number, or screen the entrance.`)}</p>${luck(ls, z)}</div>`;
   }
   if (!S.windows.length) html += `<p class="note">${tr('未標記窗戶。按 <b>+ 窗戶</b>，再點擊圖則上每個窗戶。', 'No windows marked. Choose <b>+ Window</b> and click each window on the plan.')}</p>`;
   S.windows.map((w, i) => ({ w, i, b: bearing(t.pt, w) })).sort((a, b) => a.b - b.b).forEach(({ w, i, b }) => {
     const sec = sec8(b), z = NQ.zheng[sec];
-    html += `<div class="item ${z ? 'bad' : 'good'}">
-      <div class="head"><span class="badge">W${i + 1}</span><strong>${esc(w.name || tr('窗戶', 'Window'))}</strong>${nqB(LOSHU[sec], z)}<span class="pill ${z ? 'warn' : 'good'}">${role(sec)}${mainTag(sec)}</span></div>
+    html += `<div class="item ${z ? 'good' : 'bad'}">
+      <div class="head"><span class="badge">W${i + 1}</span><strong>${esc(w.name || tr('窗戶', 'Window'))}</strong>${nqB(LOSHU[sec], z)}<span class="pill ${z ? 'good' : 'warn'}">${role(sec)}${mainTag(sec)}</span></div>
       <p class="meta">${tr(`位於${d.who}的${dirLabel(b)}`, `Lies ${dirLabel(b)} of ${d.who}`)} · ${pal(sec)}</p>
-      <p>${open(sec, tr('窗', 'window'))}</p>${luck(sec, !z)}
+      <p>${open(sec, tr('窗', 'window'))}</p>${luck(sec, z)}
     </div>`;
   });
   html += `</section>`;
@@ -2150,10 +2152,19 @@ const MANUAL = [
   { k: 'bird', l: ['朱雀（前）', 'Vermilion Bird (front)'], o: MOPT.g3 },
   { k: 'motion', l: ['動象', 'Movement outside'], h: ['馬路、天橋、水流、工地等', 'Roads, flyovers, water, works'], o: MOPT.motion },
 ];
+function entryOf(key) {
+  // the qi entrance for a taiji point: the sofa takes the front door, the bed its nearest window (or the door)
+  const pt = key === 'bed' ? S.bed : key === 'sofa' ? S.sofa : S.center;
+  if (key === 'bed' && S.windows.length) {
+    const w = S.windows.reduce((a, b) => Math.hypot(b.x - pt.x, b.y - pt.y) < Math.hypot(a.x - pt.x, a.y - pt.y) ? b : a);
+    return { pt: w, name: [w.name ? `窗（${w.name}）` : '最近嘅窗', w.name ? `window (${w.name})` : 'nearest window'] };
+  }
+  return { pt: S.door, name: ['大門', 'Front door'] };
+}
 function luckAt(sec, kind) {
   // kind 'open' (door, window) or 'rest' (bed, sofa), judged by the chosen compass type
   const h = house();
-  if (S.school === 'naqi') { const z = naqi(S.period).zheng[sec]; return kind === 'open' ? !z : z; }
+  if (S.school === 'naqi') return naqi(S.period).zheng[sec]; // drawing 正神 qi is lucky
   if (S.school === 'flying') { const F = flyChart(S.period, h.sitting, h.facing); return timely(kind === 'open' ? F.wat.p[sec] : F.mtn.p[sec], S.period).good; }
   return starAt(h.gua, sec).good;
 }
@@ -2168,10 +2179,18 @@ function assess() {
     const ok = S.windows.filter(w => luckAt(sec8(bearing(c, w)), 'open')).length, f = ok / S.windows.length;
     add('window', ['窗戶座向', 'Window directions'], 1 + Math.round(f * 4), [`${S.windows.length} 個窗之中 ${ok} 個喺吉方。`, `${ok} of ${S.windows.length} windows are in lucky sectors.`]);
   } else add('window', ['窗戶座向', 'Window directions'], null, ['未標記窗戶。', 'No windows marked.']);
-  const bs = sec8(bearing(c, S.bed)), bg = luckAt(bs, 'rest'), coffin = angDiff(bearing(S.bed, S.door), toBearing(S.bed.rot) + 180) < 20;
-  add('bed', ['床位', 'Bed'], coffin ? 1 : bg ? 5 : 2, [`床喺${TRI[bs].dirZh}方，${bg ? '屬吉' : '屬凶'}${coffin ? '；腳尾對門' : ''}。`, `The bed is in the ${TRI[bs].dirEn.toLowerCase()}, ${bg ? 'lucky' : 'unlucky'}${coffin ? '; feet point at the door' : ''}.`]);
-  const ss = sec8(bearing(c, S.sofa)), sg = luckAt(ss, 'rest'), cmd = angDiff(bearing(S.sofa, S.door), toBearing(S.sofa.rot)) < 70;
-  add('sofa', ['沙發位', 'Sofa'], (sg ? 3 : 1) + (cmd ? 2 : 0), [`沙發喺${TRI[ss].dirZh}方，${sg ? '屬吉' : '屬凶'}；${cmd ? '望到大門' : '背向或側對大門'}。`, `The sofa is in the ${TRI[ss].dirEn.toLowerCase()}, ${sg ? 'lucky' : 'unlucky'}; ${cmd ? 'the door is in view' : 'the door is behind or beside it'}.`]);
+  // bed and sofa: taiji at the furniture, qi entering from its entrance (window or door)
+  const qiLine = key => { const E = entryOf(key), pt = key === 'bed' ? S.bed : S.sofa, sec = sec8(bearing(pt, E.pt)), ok = luckAt(sec, 'open');
+    const NQ = S.school === 'naqi' ? naqi(S.period) : null, main = NQ && (sec === NQ.mainZ || sec === NQ.mainL);
+    const num = S.school === 'naqi' ? LOSHU[sec] : null;
+    return { E, sec, ok, score: ok ? (main ? 5 : 4) : (main ? 1 : 2), num }; };
+  const qtxt = (q, what) => q.num != null
+    ? [`以${what[0]}立極，${q.E.name[0]}入氣，收${q.num}之氣，${q.ok ? '屬正神，吉' : '屬零神，凶'}`, `Taiji at the ${what[1]}, qi from the ${q.E.name[1].toLowerCase()} on ${q.num}: ${q.ok ? '正神, lucky' : '零神, unlucky'}`]
+    : [`以${what[0]}立極，${q.E.name[0]}喺${TRI[q.sec].dirZh}方入氣，${q.ok ? '屬吉' : '屬凶'}`, `Taiji at the ${what[1]}, qi from the ${q.E.name[1].toLowerCase()} in the ${TRI[q.sec].dirEn.toLowerCase()}: ${q.ok ? 'lucky' : 'unlucky'}`];
+  const qb = qiLine('bed'), coffin = angDiff(bearing(S.bed, S.door), toBearing(S.bed.rot) + 180) < 20, bt = qtxt(qb, ['床', 'bed']);
+  add('bed', ['床位', 'Bed'], coffin ? 1 : qb.score, [bt[0] + (coffin ? '；腳尾對門' : '') + '。', bt[1] + (coffin ? '; feet point at the door' : '') + '.']);
+  const qs = qiLine('sofa'), st2 = qtxt(qs, ['沙發', 'sofa']);
+  add('sofa', ['沙發位', 'Sofa'], qs.score, [st2[0] + '。', st2[1] + '.']);
   const wet = S.rooms.filter(r => r.type === 'kitchen' || r.type === 'bath');
   if (wet.length) {
     const lim = 0.12 * Math.min(S.img.w, S.img.h), hit = wet.filter(r => Math.hypot(r.x - c.x, r.y - c.y) < lim);
