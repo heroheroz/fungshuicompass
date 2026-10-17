@@ -202,6 +202,23 @@ table.ref th { color: var(--muted); font-weight: 500; font-size: 11.5px; }
 .c-bad { fill: var(--c-bad); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+/* Assessment */
+.assess { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--surface); }
+.as-top { display: flex; align-items: baseline; gap: 10px; }
+.as-stars { font-size: 28px; color: #b8860b; letter-spacing: 2px; }
+.as-num { font-family: var(--f-mono); font-size: 16px; font-weight: 600; }
+.as-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.as-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; }
+.as-row .hint { display: block; color: var(--muted); font-size: 11.5px; }
+.as-s { font-size: 14px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
+.as-s.good { color: var(--n6); } .as-s.mid { color: #b8860b; } .as-s.bad { color: var(--n1); }
+.as-opts { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.as-opts button { border: 0; border-left: 1px solid var(--line); background: var(--bg); padding: 3px 8px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.as-opts button:first-child { border-left: 0; }
+.as-opts button[aria-pressed="true"].good { background: var(--n6); color: #fff; }
+.as-opts button[aria-pressed="true"].mid { background: #b8860b; color: #fff; }
+.as-opts button[aria-pressed="true"].bad { background: var(--n1); color: #fff; }
+.assess details summary { cursor: pointer; font-weight: 600; font-size: 13px; margin-top: 10px; }
 /* Library */
 .lib-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .lib-form label, .lib-notes { display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; color: var(--muted); }
@@ -816,9 +833,10 @@ print-color-adjust: exact;
       <h1 data-i18n-html="h1"></h1>
       <p data-i18n="sub"></p>
     </div>
+    <div class="row"><a id="galleryLink" class="btn" href="gallery.html" hidden data-i18n="gallery"></a>
     <div class="group" role="group" aria-label="Language 語言">
       <button type="button" data-lang="zh" lang="zh-Hant">繁體中文</button><button type="button" data-lang="en" lang="en">English</button>
-    </div>
+    </div></div>
   </header>
 
   <main class="bench">
@@ -947,6 +965,7 @@ print-color-adjust: exact;
   </aside>
 </div>
 
+<script src="config.js"></script>
 <script>
 (() => {
 'use strict';
@@ -976,7 +995,7 @@ const UI = {
   addCompass: ['+ 加羅盤', '+ Add compass'], resetView: ['↺ 全部重設', '↺ Reset all'], resetViewSure: ['再按一次確認重設', 'Click again to reset'], cmpSize: ['大小', 'Size'], cmpTrans: ['透明度', 'Transparency'],
   anchorActive: ['跟隨分析位置', 'Follows reading spot'], anchorOutline: ['外框中心', 'Outline centre'], anchorDoor: ['大門', 'Front door'],
   hint4: ['把圖片拖放到圖則上即可載入。', 'Drop an image onto the plan to load it.'],
-  tabReading: ['分析', 'Reading'], tabSetup: ['設定', 'Setup'], tabGuide: ['說明', 'Guide'], tabLibrary: ['資料庫', 'Library'],
+  tabReading: ['分析', 'Reading'], tabSetup: ['設定', 'Setup'], tabGuide: ['說明', 'Guide'], tabLibrary: ['資料庫', 'Library'], gallery: ['社群圖庫 ↗', 'Gallery ↗'],
   compass: ['羅盤', 'Compass'], northPoints: ['北方指向', 'North points'], quick: ['快速設定：', 'Quick set:'],
   up: ['上', 'Up'], right: ['右', 'Right'], down: ['下', 'Down'], left: ['左', 'Left'],
   size: ['大小', 'Size'], opacity: ['透明度', 'Opacity'], style: ['樣式：', 'Style:'], light: ['淺色', 'Light'], dark: ['深色', 'Dark'],
@@ -1535,7 +1554,7 @@ function drawFrame() {
 let rafPending = false;
 function drawDynamic() {
   if (rafPending) return; rafPending = true;
-  requestAnimationFrame(() => { rafPending = false; if (S.centerLock) { const c = toImage({ x: S.frame.cx, y: S.frame.cy }); S.center.x = c.x; S.center.y = c.y; } drawCompass(); drawFrame(); drawRays(); drawMarkers(); renderReading(); renderTargets(); syncControls(); });
+  requestAnimationFrame(() => { rafPending = false; if (S.centerLock) { const c = toImage({ x: S.frame.cx, y: S.frame.cy }); S.center.x = c.x; S.center.y = c.y; } drawCompass(); drawFrame(); drawRays(); drawMarkers(); renderReading(); renderAssessment(); renderTargets(); syncControls(); });
 }
 
 // ---------- Interaction ----------
@@ -1675,7 +1694,7 @@ function loadFile(file) {
         S.target = 'center'; S.north = 180;
       }
       S.img = { src: fr.result, w, h, sample: false };
-      S.frame = defaultFrame(S.img); S.imgRot = 0; S.libId = null;
+      S.frame = defaultFrame(S.img); S.imgRot = 0; S.libId = null; S.manual = {};
       renderLists(); setupStage(); save();
     };
     im.src = fr.result;
@@ -2111,10 +2130,118 @@ function orientationReading(t, h, kua) {
   return s;
 }
 
+// ---------- Assessment ----------
+// Scores each feng shui item 1-5 stars: some from the marks on the plan under the chosen compass type,
+// the rest picked by hand (beams, the four symbols…). The overall score is their average.
+const MOPT = {
+  g3: [['good', '好', 'good', 5], ['mid', '一般', 'fair', 3], ['bad', '差', 'poor', 1]],
+  noyes: [['no', '冇', 'no', 5], ['yes', '有', 'yes', 1]],
+  beam: [['no', '冇', 'none', 5], ['minor', '有，唔壓位', 'yes, clear', 3], ['press', '有，壓位', 'over a seat', 1]],
+  motion: [['good', '吉', 'helpful', 5], ['none', '冇', 'none', 4], ['bad', '凶', 'harmful', 1]],
+};
+const MANUAL = [
+  { k: 'beam', l: ['橫樑', 'Beams'], h: ['有冇樑壓床、壓沙發或書枱', 'Beams over the bed, sofa or desk?'], o: MOPT.beam },
+  { k: 'pillar', l: ['柱位／凸角', 'Pillars or corners'], o: MOPT.noyes },
+  { k: 'wcKitchen', l: ['廁所廚房對沖', 'Toilet facing kitchen'], o: MOPT.noyes },
+  { k: 'doorDoor', l: ['門對門', 'Doors facing doors'], o: MOPT.noyes },
+  { k: 'dragon', l: ['青龍（左）', 'Azure Dragon (left)'], o: MOPT.g3 },
+  { k: 'tiger', l: ['白虎（右）', 'White Tiger (right)'], o: MOPT.g3 },
+  { k: 'tortoise', l: ['玄武（後）', 'Black Tortoise (back)'], o: MOPT.g3 },
+  { k: 'bird', l: ['朱雀（前）', 'Vermilion Bird (front)'], o: MOPT.g3 },
+  { k: 'motion', l: ['動象', 'Movement outside'], h: ['馬路、天橋、水流、工地等', 'Roads, flyovers, water, works'], o: MOPT.motion },
+];
+function luckAt(sec, kind) {
+  // kind 'open' (door, window) or 'rest' (bed, sofa), judged by the chosen compass type
+  const h = house();
+  if (S.school === 'naqi') { const z = naqi(S.period).zheng[sec]; return kind === 'open' ? !z : z; }
+  if (S.school === 'flying') { const F = flyChart(S.period, h.sitting, h.facing); return timely(kind === 'open' ? F.wat.p[sec] : F.mtn.p[sec], S.period).good; }
+  return starAt(h.gua, sec).good;
+}
+function assess() {
+  const items = [], c = S.center, add = (k, l, score, why) => items.push({ k, l, score, why, auto: true });
+  // 太極點: does the centre sit on the outline's cross?
+  const fc = toImage({ x: S.frame.cx, y: S.frame.cy }), off = Math.hypot(fc.x - c.x, fc.y - c.y) / Math.max(1, Math.min(S.img.w, S.img.h));
+  add('taiji', ['太極點（屋中心）', 'Taiji point (centre)'], off < 0.03 ? 5 : off < 0.08 ? 3 : 2, off < 0.03 ? ['中心點同外框十字線一致。', 'The centre sits on the outline\'s cross.'] : ['中心點偏離外框十字線，請檢查外框同中心位置。', 'The centre is off the outline\'s cross; check the outline and centre.']);
+  const ds = sec8(bearing(c, S.door)), dg = luckAt(ds, 'open');
+  add('door', ['大門座向', 'Front door direction'], dg ? 5 : 2, [`大門喺${TRI[ds].dirZh}方，${dg ? '屬吉' : '屬凶'}。`, `The door is in the ${TRI[ds].dirEn.toLowerCase()}, ${dg ? 'a lucky' : 'an unlucky'} sector.`]);
+  if (S.windows.length) {
+    const ok = S.windows.filter(w => luckAt(sec8(bearing(c, w)), 'open')).length, f = ok / S.windows.length;
+    add('window', ['窗戶座向', 'Window directions'], 1 + Math.round(f * 4), [`${S.windows.length} 個窗之中 ${ok} 個喺吉方。`, `${ok} of ${S.windows.length} windows are in lucky sectors.`]);
+  } else add('window', ['窗戶座向', 'Window directions'], null, ['未標記窗戶。', 'No windows marked.']);
+  const bs = sec8(bearing(c, S.bed)), bg = luckAt(bs, 'rest'), coffin = angDiff(bearing(S.bed, S.door), toBearing(S.bed.rot) + 180) < 20;
+  add('bed', ['床位', 'Bed'], coffin ? 1 : bg ? 5 : 2, [`床喺${TRI[bs].dirZh}方，${bg ? '屬吉' : '屬凶'}${coffin ? '；腳尾對門' : ''}。`, `The bed is in the ${TRI[bs].dirEn.toLowerCase()}, ${bg ? 'lucky' : 'unlucky'}${coffin ? '; feet point at the door' : ''}.`]);
+  const ss = sec8(bearing(c, S.sofa)), sg = luckAt(ss, 'rest'), cmd = angDiff(bearing(S.sofa, S.door), toBearing(S.sofa.rot)) < 70;
+  add('sofa', ['沙發位', 'Sofa'], (sg ? 3 : 1) + (cmd ? 2 : 0), [`沙發喺${TRI[ss].dirZh}方，${sg ? '屬吉' : '屬凶'}；${cmd ? '望到大門' : '背向或側對大門'}。`, `The sofa is in the ${TRI[ss].dirEn.toLowerCase()}, ${sg ? 'lucky' : 'unlucky'}; ${cmd ? 'the door is in view' : 'the door is behind or beside it'}.`]);
+  const wet = S.rooms.filter(r => r.type === 'kitchen' || r.type === 'bath');
+  if (wet.length) {
+    const lim = 0.12 * Math.min(S.img.w, S.img.h), hit = wet.filter(r => Math.hypot(r.x - c.x, r.y - c.y) < lim);
+    add('centre', ['中宮壓水火', 'Water or fire at the centre'], hit.length ? 1 : 5, hit.length ? [`${hit.map(r => r.name || ROOM_TYPES[r.type].label[0]).join('、')}壓住屋中心。`, `${hit.map(r => r.name || ROOM_TYPES[r.type].label[1]).join(', ')} sits on the centre.`] : ['廚房、廁所冇壓中宮。', 'No kitchen or bathroom on the centre.']);
+  } else add('centre', ['中宮壓水火', 'Water or fire at the centre'], null, ['未標記廚房或浴室。', 'No kitchen or bathroom marked.']);
+  const man = S.manual || {};
+  MANUAL.forEach(m => { const o = m.o.find(x => x[0] === man[m.k]); items.push({ k: m.k, l: m.l, score: o ? o[3] : null, auto: false, m, v: man[m.k] }); });
+  const sc = items.filter(i => i.score != null).map(i => i.score);
+  const overall = sc.length ? Math.round(sc.reduce((a, b) => a + b, 0) / sc.length * 2) / 2 : null;
+  return { items, overall, answered: items.filter(i => !i.auto && i.score != null).length };
+}
+const starTxt = n => n == null ? '—' : '★'.repeat(Math.floor(n)) + (n % 1 ? '⯪' : '') + '☆'.repeat(5 - Math.ceil(n));
+let asOpen = false;
+function renderAssessment() {
+  const pane = $('#pane-reading'); if (!pane) return;
+  const A = assess(), el = document.createElement('section');
+  el.className = 'block assess';
+  el.innerHTML = `<h2>${tr('整體風水評分', 'Overall feng shui score')}</h2>
+    <div class="as-top"><span class="as-stars">${starTxt(A.overall)}</span><span class="as-num">${A.overall == null ? '' : A.overall + ' / 5'}</span></div>
+    <p class="note">${tr(`按目前「${({ naqi: '納氣', flying: '玄空飛星', mansion: '八宅' })[S.school]}」羅盤自動評估，再加你揀嘅項目平均計分。`, `Scored automatically with the current ${({ naqi: 'Na Qi', flying: 'Flying Stars', mansion: 'Eight Mansions' })[S.school]} compass, averaged with the items you pick below.`)}</p>
+    <div class="as-list">${A.items.filter(i => i.auto).map(i => `<div class="as-row"><span>${pick(i.l)}<span class="hint">${pick(i.why)}</span></span><span class="as-s ${i.score == null ? '' : i.score >= 4 ? 'good' : i.score >= 3 ? 'mid' : 'bad'}">${i.score == null ? tr('未評', 'n/a') : starTxt(i.score)}</span></div>`).join('')}</div>
+    <details id="asManual" ${asOpen ? 'open' : ''}><summary>${tr(`人手評估（${A.answered}/${MANUAL.length}）`, `Your assessment (${A.answered}/${MANUAL.length})`)}</summary>
+      <div class="as-list">${A.items.filter(i => !i.auto).map(i => `<div class="as-row"><span>${pick(i.l)}${i.m.h ? `<span class="hint">${pick(i.m.h)}</span>` : ''}</span><span class="as-opts">${i.m.o.map(o => `<button type="button" data-mk="${i.k}" data-mv="${o[0]}" aria-pressed="${i.v === o[0]}" class="${o[3] >= 4 ? 'good' : o[3] >= 3 ? 'mid' : 'bad'}">${tr(o[1], o[2])}</button>`).join('')}</span></div>`).join('')}</div></details>
+    <p class="note">${tr('評分只供參考，唔代表專業風水意見。', 'For reflection only, not professional advice.')}</p>`;
+  pane.insertBefore(el, pane.firstChild);
+}
+$('#pane-reading').addEventListener('toggle', e => { if (e.target.id === 'asManual') asOpen = e.target.open; }, true);
+$('#pane-reading').addEventListener('click', e => {
+  const b = e.target.closest('[data-mk]'); if (!b) return;
+  S.manual = S.manual || {}; const k = b.dataset.mk;
+  if (S.manual[k] === b.dataset.mv) delete S.manual[k]; else S.manual[k] = b.dataset.mv;
+  save(); drawDynamic();
+});
+
 // ---------- Library ----------
 // Saved plans live in this browser's IndexedDB: the finished picture (plan + compass), the full working state,
 // and where the flat is. Export / import moves the whole library between devices or people.
-const LIB = { db: null, items: [], filter: '', facing: 'all', draft: { name: '', block: '', floor: '', unit: '', address: '', lat: null, lng: null, notes: '' }, map: null, layer: null, pick: null, results: [], busy: '' };
+const LIB = { db: null, items: [], filter: '', facing: 'all', draft: { name: '', block: '', floor: '', unit: '', address: '', lat: null, lng: null, notes: '', author: '' }, map: null, layer: null, pick: null, results: [], busy: '' };
+// Shared gallery backend (Supabase). Set in config.js; without it the library stays local only.
+const CLOUD = window.FS_CLOUD && window.FS_CLOUD.url && window.FS_CLOUD.key ? window.FS_CLOUD : null;
+function cloudFetch(path, opts = {}) {
+  return fetch(CLOUD.url.replace(/\/$/, '') + path, { ...opts, headers: { apikey: CLOUD.key, Authorization: 'Bearer ' + CLOUD.key, ...(opts.headers || {}) } })
+    .then(r => r.ok ? (r.status === 204 ? null : r.json().catch(() => null)) : r.text().then(t => { throw new Error(t || r.status); }));
+}
+const dataUrlBlob = u => fetch(u).then(r => r.blob());
+function planJpeg(maxW = 2000) {
+  return new Promise(res => {
+    const im = new Image();
+    im.onload = () => { const sc = Math.min(1, maxW / (im.naturalWidth || S.img.w)), W = Math.round((im.naturalWidth || S.img.w) * sc), H = Math.round((im.naturalHeight || S.img.h) * sc);
+      const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, W, H); x.drawImage(im, 0, 0, W, H); res(c.toDataURL('image/jpeg', 0.85)); };
+    im.onerror = () => res(null);
+    im.src = S.img.src;
+  });
+}
+function cloudShare(it) {
+  // uploads the finished picture and the original plan, then records the details for the gallery
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  const ym = new Date().toISOString().slice(0, 7), img = `${ym}/${uid()}.jpg`, plan = `${ym}/${uid()}-plan.jpg`;
+  const put = (path, blob) => cloudFetch(`/storage/v1/object/plans/${path}`, { method: 'POST', headers: { 'Content-Type': 'image/jpeg', 'x-upsert': 'false' }, body: blob });
+  const { img: _i, ...layout } = it.state;
+  return dataUrlBlob(it.thumb).then(b => put(img, b))
+    .then(() => planJpeg()).then(u => u ? dataUrlBlob(u).then(b => put(plan, b)).then(() => plan, () => null) : null)
+    .then(planPath => cloudFetch('/rest/v1/plans', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify({ building: it.name, block: it.block || null, floor: it.floor || null, unit: it.unit || null, address: it.address || null, lat: it.lat, lng: it.lng,
+        facing: it.facing, sector: it.sector, label: it.label, label_en: it.labelEn, school: it.school, period: it.period, author: it.author || null, notes: it.notes || null,
+        image_path: img, plan_path: planPath, layout, score: it.score, assessment: it.assessment }) }))
+    .then(rows => rows && rows[0] && rows[0].id);
+}
+$('#galleryLink').hidden = !CLOUD;
+const galleryUrl = id => 'gallery.html' + (id ? '#' + id : '');
 function libDB() {
   if (LIB.db) return Promise.resolve(LIB.db);
   return new Promise((res, rej) => {
@@ -2241,7 +2368,9 @@ function renderLibrary() {
     <div id="libResults" class="lib-results"></div>
     <p id="libPoint" class="lib-point"></p>
     <label class="lib-notes">${tr('備註', 'Notes')}<textarea data-libf="notes" rows="2">${esc(d.notes)}</textarea></label>
-    <div class="row">${editing ? `<button type="button" class="btn primary" data-libsave="update">${tr('更新紀錄', 'Update')}</button><button type="button" class="btn" data-libsave="new">${tr('另存新紀錄', 'Save as new')}</button>` : `<button type="button" class="btn primary" data-libsave="new">${tr('儲存到資料庫', 'Save to library')}</button>`}<span class="note" id="libMsg">${LIB.busy === 'nodb' ? tr('此瀏覽器唔支援本機資料庫（例如私密模式）。', 'This browser cannot keep a local library (private mode?).') : ''}</span></div>
+    ${CLOUD ? `<label class="lib-notes">${tr('你嘅稱呼（選填，會公開顯示）', 'Your name (optional, shown publicly)')}<input type="text" data-libf="author" value="${esc(d.author)}"></label>
+    <p class="note">${tr('「儲存並分享」會將加咗羅盤嘅圖、原本戶型圖、大廈資料同地圖位置公開上載到社群圖庫，讓其他人留評論同評分。唔想公開就揀「只存喺本機」。', '"Save and share" uploads the compass picture, the original plan, the building details and map location to the public gallery, where others can comment and rate it. Choose "Save on this device" to keep it private.')}</p>` : ''}
+    <div class="row">${CLOUD ? `<button type="button" class="btn primary" data-libsave="${editing ? 'update' : 'new'}" data-share="1">${tr('儲存並分享到社群', 'Save and share')}</button>` : ''}${editing ? `<button type="button" class="btn ${CLOUD ? '' : 'primary'}" data-libsave="update">${tr('更新本機紀錄', 'Update on this device')}</button><button type="button" class="btn" data-libsave="new">${tr('另存新紀錄', 'Save as new')}</button>` : `<button type="button" class="btn ${CLOUD ? '' : 'primary'}" data-libsave="new">${CLOUD ? tr('只存喺本機', 'Save on this device') : tr('儲存到資料庫', 'Save to library')}</button>`}<span class="note" id="libMsg">${LIB.busy === 'nodb' ? tr('此瀏覽器唔支援本機資料庫（例如私密模式）。', 'This browser cannot keep a local library (private mode?).') : ''}</span></div>
   </section>
   <section class="block"><h2>${tr('地圖', 'Map')}</h2><div id="libMap" class="lib-map"></div></section>
   <section class="block"><h2>${tr('資料庫', 'Library')} <span class="note">(${LIB.items.length})</span></h2>
@@ -2264,14 +2393,14 @@ function renderLibList() {
       <img src="${it.thumb}" alt="" data-libopen="${it.id}">
       <div class="lib-meta">
         <b>${esc(libUnitText(it) || it.name)}</b>
-        <span>${esc(S.lang === 'en' ? it.labelEn : it.label)} · <span class="num">${it.facing}°</span></span>
+        <span>${esc(S.lang === 'en' ? it.labelEn : it.label)} · <span class="num">${it.facing}°</span>${it.score != null ? ` · <span style="color:#b8860b">${starTxt(it.score)}</span>` : ''}</span>
         ${it.address ? `<span class="note">${esc(it.address)}</span>` : ''}
         ${it.notes ? `<span class="note">${esc(it.notes)}</span>` : ''}
-        <span class="note">${new Date(it.updated).toLocaleDateString(S.lang === 'en' ? 'en-GB' : 'zh-HK')}</span>
+        <span class="note">${new Date(it.updated).toLocaleDateString(S.lang === 'en' ? 'en-GB' : 'zh-HK')}${it.cloudId ? ` · <a href="${galleryUrl(it.cloudId)}" target="_blank" rel="noopener">${tr('已分享 · 睇評論', 'Shared · see comments')} ↗</a>` : ''}</span>
         <span class="lib-acts"><button type="button" class="btn" data-libopen="${it.id}">${tr('開啟', 'Open')}</button><a class="btn" href="${gmapsUrl(it)}" target="_blank" rel="noopener">Google Maps ↗</a><button type="button" class="btn" data-libdl="${it.id}">${tr('下載圖片', 'Download')}</button><button type="button" class="icon-btn" data-libdel="${it.id}" aria-label="${tr('刪除', 'Delete')}">✕</button></span>
       </div></div>`).join('') + `</div>`).join('');
 }
-function libSave(mode) {
+function libSave(mode, share) {
   const d = LIB.draft, msg = $('#libMsg');
   if (!d.name.trim()) { msg.textContent = tr('請先填大廈／屋苑名稱。', 'Please enter the building or estate name.'); $('[data-libf="name"]').focus(); return; }
   msg.textContent = tr('儲存中…', 'Saving…');
@@ -2279,9 +2408,15 @@ function libSave(mode) {
   const prev = LIB.items.find(i => i.id === id);
   snapshot().then(thumb => {
     const state = JSON.parse(JSON.stringify({ ...S, tool: 'move', selected: null, libId: id }));
-    const it = { id, created: prev ? prev.created : now, updated: now, ...JSON.parse(JSON.stringify(d)), name: d.name.trim(), ...fi, school: S.school, period: S.period, thumb, state };
-    return libTx('readwrite', st => st.put(it)).then(() => { S.libId = id; save(); return libLoad(); });
-  }).then(() => { renderLibrary(); const m = $('#libMsg'); if (m) m.textContent = tr('已儲存。', 'Saved.'); })
+    const it = { id, created: prev ? prev.created : now, updated: now, ...JSON.parse(JSON.stringify(d)), name: d.name.trim(), ...fi, school: S.school, period: S.period, thumb, state, cloudId: prev ? prev.cloudId : undefined, ...(() => { const A = assess(); return { score: A.overall, assessment: Object.fromEntries(A.items.filter(i => i.score != null).map(i => [i.k, { s: i.score, v: i.v || null, auto: i.auto }])) }; })() };
+    return libTx('readwrite', st => st.put(it)).then(() => { S.libId = id; save(); return it; });
+  }).then(it => {
+    if (!share || !CLOUD) return libLoad().then(() => tr('已儲存喺本機。', 'Saved on this device.'));
+    msg.textContent = tr('上載中…', 'Uploading…');
+    return cloudShare(it).then(cid => { it.cloudId = cid; return libTx('readwrite', st => st.put(it)); })
+      .then(libLoad).then(() => tr('已儲存並分享到社群。', 'Saved and shared to the gallery.'))
+      .catch(() => libLoad().then(() => tr('已儲存喺本機，但上載失敗，請稍後再試。', 'Saved on this device, but the upload failed. Please try again later.')));
+  }).then(t => { renderLibrary(); const m = $('#libMsg'); if (m) m.textContent = t; })
     .catch(() => { msg.textContent = tr('儲存失敗。', 'Could not save.'); });
 }
 function libOpen(id) {
@@ -2313,7 +2448,7 @@ $('#pane-library').addEventListener('click', e => {
   if (t.id === 'libHere' && navigator.geolocation) navigator.geolocation.getCurrentPosition(p => libSetPoint(p.coords.latitude, p.coords.longitude), () => { $('#libMsg').textContent = tr('攞唔到你嘅位置。', 'Could not get your location.'); });
   const r = t.closest('[data-libres]'); if (r) { const x = LIB.results[+r.dataset.libres]; if (!LIB.draft.address) LIB.draft.address = x.name; libSetPoint(x.lat, x.lng); LIB.results = []; renderLibResults(); }
   if (t.closest('[data-libclear]')) { LIB.draft.lat = LIB.draft.lng = null; renderLibPoint(); libMapDraw(); }
-  const sv = t.closest('[data-libsave]'); if (sv) libSave(sv.dataset.libsave);
+  const sv = t.closest('[data-libsave]'); if (sv) libSave(sv.dataset.libsave, !!sv.dataset.share);
   const dl = t.closest('[data-libdl]'); if (dl) { const it = LIB.items.find(i => i.id === dl.dataset.libdl); const a = document.createElement('a'); a.href = it.thumb; a.download = `${[it.name, it.block, it.floor, it.unit].filter(Boolean).join('-')}.jpg`; a.click(); }
   const dd = t.closest('[data-libdel]'); if (dd) {
     if (dd.dataset.armed) { libTx('readwrite', st => st.delete(dd.dataset.libdel)).then(libLoad).then(() => { if (S.libId === dd.dataset.libdel) S.libId = null; renderLibrary(); }); }
