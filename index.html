@@ -1,0 +1,1550 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>風水羅盤</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@500;700;900&display=swap">
+<style>
+/* Layout: instrument bench. The plan sits on a drafting surface on the left, the reading ledger runs down the right; stacked on phones. */
+:root {
+  --n1: #c4271c; --n5: #8a5a2b; --n6: #2c8a6a; --nz: #2f78c4;
+  --bg: #eef0ec;
+  --surface: #f9faf7;
+  --stage: #e3e6e0;
+  --ink: #1b2320;
+  --muted: #5c6862;
+  --line: #cfd5cd;
+  --cinnabar: #b8321f;
+  --cinnabar-soft: #f4dcd6;
+  --jade: #2c6b58;
+  --jade-soft: #d6e8e0;
+  --brass: #94721f;
+  --brass-soft: #f1e6c8;
+  --focus: #2c6b58;
+  --f-display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+  --f-body: "IBM Plex Sans", "Noto Sans TC", system-ui, -apple-system, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --n1: #ec6a52; --n5: #c99a6a; --n6: #67b89c; --nz: #6fa8e6;
+    --bg: #111614; --surface: #18201d; --stage: #0c100e; --ink: #e4e9e5; --muted: #95a29b; --line: #2c3833;
+    --cinnabar: #ec6a52; --cinnabar-soft: #3c1f19; --jade: #67b89c; --jade-soft: #173229; --brass: #d3ac52; --brass-soft: #362c14; --focus: #67b89c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --n1: #ec6a52; --n5: #c99a6a; --n6: #67b89c; --nz: #6fa8e6;
+  --bg: #111614; --surface: #18201d; --stage: #0c100e; --ink: #e4e9e5; --muted: #95a29b; --line: #2c3833;
+  --cinnabar: #ec6a52; --cinnabar-soft: #3c1f19; --jade: #67b89c; --jade-soft: #173229; --brass: #d3ac52; --brass-soft: #362c14; --focus: #67b89c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { min-height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.55; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1600px; margin: 0 auto; }
+@media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+header.top .titles { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; flex: 1; min-width: 0; }
+header.top h1 { font-family: var(--f-display); font-weight: 900; font-size: 26px; margin: 0; letter-spacing: 0.02em; }
+header.top h1 span { color: var(--cinnabar); }
+header.top p { margin: 0; color: var(--muted); }
+
+.bench { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.group { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.group button { border: 0; background: transparent; padding: 6px 11px; cursor: pointer; white-space: nowrap; }
+.group button + button { border-left: 1px solid var(--line); }
+.group button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.btn { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 8px; cursor: pointer; white-space: nowrap; }
+.btn:hover, .group button:hover:not([aria-pressed="true"]) { background: var(--bg); }
+.btn.primary { background: var(--cinnabar); border-color: var(--cinnabar); color: #fff; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.label-sm { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.targets { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 11px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip b { font-family: var(--f-display); font-weight: 700; }
+.chip[aria-pressed="true"] { border-color: var(--cinnabar); background: var(--cinnabar-soft); color: var(--ink); }
+
+.stage-wrap { position: relative; background: var(--stage); border-radius: 10px; display: flex; justify-content: center; align-items: center; min-height: 300px; overflow: hidden; }
+.stage-wrap.drop { outline: 2px dashed var(--cinnabar); outline-offset: -8px; }
+#stage { display: block; touch-action: none; user-select: none; -webkit-user-select: none; }
+#stage.placing { cursor: crosshair; }
+.ctrl { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 10px; }
+.rots { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 6px 18px; }
+.rot { display: grid; grid-template-columns: 96px minmax(0, 1fr) 40px auto; gap: 6px; align-items: center; font-size: 13px; }
+.rot .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.mini { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 1px 6px; font-size: 12px; cursor: pointer; }
+.mini:hover { border-color: var(--cinnabar); }
+.cmps { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 8px; }
+.cmp-row { display: grid; grid-template-columns: 86px minmax(120px, 180px) minmax(0, 1fr) minmax(0, 1fr) 28px; gap: 8px; align-items: center; font-size: 13px; }
+.cmp-row label { display: grid; grid-template-columns: auto minmax(0, 1fr) 36px; gap: 6px; align-items: center; color: var(--muted); font-size: 12.5px; }
+.cmp-row .zh { color: var(--ink); }
+.cmp-row label.cmp-show { display: flex; gap: 6px; align-items: center; cursor: pointer; white-space: nowrap; }
+.cmp-show input { accent-color: var(--cinnabar); width: 16px; height: 16px; margin: 0; }
+@media (max-width: 640px) { .cmp-row { grid-template-columns: 1fr 1fr 28px; } .cmp-row label { grid-column: 1 / -1; } }
+.zoom { position: absolute; bottom: 10px; right: 10px; display: flex; flex-direction: column; align-items: stretch; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+.zoom button { border: 0; background: transparent; padding: 5px 9px; cursor: pointer; font-size: 16px; line-height: 1.1; }
+.zoom button:hover { background: var(--bg); }
+.zoom #zoomFit { font-size: 11.5px; border-top: 1px solid var(--line); }
+.zoom output { font-size: 11px; text-align: center; padding: 2px 4px; border-block: 1px solid var(--line); }
+.hint { font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.sample-tag { position: absolute; bottom: 10px; left: 10px; background: var(--brass-soft); color: var(--ink); border: 1px solid var(--brass); padding: 2px 9px; border-radius: 6px; font-size: 12px; }
+
+.ledger { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; align-self: start; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); }
+@media (max-width: 980px) { .ledger { position: static; max-height: none; } }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1; border: 0; background: transparent; padding: 11px 6px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; font-weight: 500; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--cinnabar); }
+.pane { padding: 14px 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.pane h2 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.pane h3 { margin: 0; font-size: 15px; }
+section.block { display: flex; flex-direction: column; gap: 8px; }
+
+.field { display: grid; grid-template-columns: 112px minmax(0, 1fr) 52px; gap: 8px; align-items: center; }
+.field label { color: var(--muted); font-size: 13px; }
+.field output, .num { font-family: var(--f-mono); font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; accent-color: var(--cinnabar); }
+input[type="text"], input[type="number"], select { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 4px 7px; min-width: 0; width: 100%; }
+.row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.checks { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+.checks label { display: flex; gap: 6px; align-items: center; font-size: 13px; }
+.list { display: flex; flex-direction: column; gap: 6px; }
+.list-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) 110px 28px; gap: 6px; align-items: center; }
+.list-item.win { grid-template-columns: 28px minmax(0, 1fr) 28px; }
+.badge { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 22px; padding: 0 5px; border-radius: 5px; font-size: 11.5px; font-weight: 600; background: var(--bg); border: 1px solid var(--line); font-family: var(--f-mono); }
+.icon-btn { border: 1px solid var(--line); background: transparent; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; color: var(--muted); }
+.icon-btn:hover { color: var(--cinnabar); border-color: var(--cinnabar); }
+.note { font-size: 12.5px; color: var(--muted); margin: 0; }
+
+/* Reading */
+.house-card { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 4px 14px; align-items: center; background: var(--bg); }
+.house-card .glyph { grid-row: span 3; font-family: var(--f-display); font-weight: 900; font-size: 54px; line-height: 1; color: var(--cinnabar); text-align: center; }
+.house-card .glyph small { display: block; font-size: 12px; font-family: var(--f-body); font-weight: 500; color: var(--muted); margin-top: 4px; }
+.house-card h3 { font-size: 16px; }
+.kv { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 3px 10px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; }
+.zh { font-family: var(--f-display); font-weight: 700; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+.loshu { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.cell { border-radius: 7px; padding: 6px 7px; min-height: 66px; display: flex; flex-direction: column; gap: 1px; font-size: 12px; border: 1px solid transparent; }
+.cell .d { display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; }
+.cell .s { font-family: var(--f-display); font-weight: 700; font-size: 16px; }
+.cell.good { background: var(--jade-soft); }
+.cell.bad { background: var(--cinnabar-soft); }
+.cell.mid { background: var(--bg); border-color: var(--line); align-items: center; justify-content: center; text-align: center; }
+.cell.mid .s { font-size: 22px; color: var(--cinnabar); }
+
+.pill { display: inline-flex; gap: 4px; align-items: center; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.good { background: var(--jade-soft); color: var(--jade); }
+.pill.bad { background: var(--cinnabar-soft); color: var(--cinnabar); }
+.pill.warn { background: var(--brass-soft); color: var(--brass); }
+.pill .zh { font-weight: 700; }
+.nb { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 4px; border-radius: 5px; font-family: var(--f-mono); font-weight: 700; font-size: 13px; color: #fff; }
+.nb.nz { background: var(--nz); } .t-nz { color: var(--nz); } .nb.n1 { background: var(--n1); } .nb.n5 { background: var(--n5); } .nb.n6 { background: var(--n6); }
+.fs-cell { border-radius: 7px; padding: 6px 7px; min-height: 78px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr auto; gap: 2px 4px; background: var(--bg); border: 1px solid var(--line); font-size: 11px; }
+.fs-cell .d { grid-column: 1 / -1; color: var(--muted); display: flex; justify-content: space-between; }
+.fs-cell .m, .fs-cell .w { font-family: var(--f-mono); font-weight: 700; font-size: 20px; line-height: 1; }
+.fs-cell .w { text-align: right; }
+.fs-cell .pd { grid-column: 1 / -1; text-align: center; font-family: var(--f-mono); font-size: 13px; color: var(--muted); }
+.fs-cell.mid { border-color: var(--cinnabar); }
+.nq-cell { border-radius: 7px; padding: 6px 8px; min-height: 78px; display: grid; grid-template-columns: 1fr auto; align-items: end; background: var(--bg); border: 1px solid var(--line); font-size: 11px; }
+.nq-cell .d { grid-column: 1 / -1; align-self: start; color: var(--muted); display: flex; justify-content: space-between; gap: 4px; }
+.nq-cell .n { font-family: var(--f-mono); font-weight: 700; font-size: 30px; line-height: 1; }
+.nq-cell .zl { font-family: var(--f-serif, serif); font-weight: 900; font-size: 15px; }
+.nq-cell.zheng .zl, .nq-cell.zheng .n { color: var(--nz); } .nq-cell.ling .zl, .nq-cell.ling .n { color: var(--n1); }
+button.nq-cell { font: inherit; text-align: left; cursor: pointer; }
+button.nq-cell:hover { border-color: var(--ink); }
+.nq-cell.custom .d::after { content: '✎'; color: var(--muted); }
+.nq-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.nq-cell.main { border-color: var(--cinnabar); border-width: 2px; }
+.nq-cell.mid { display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.t-n1 { color: var(--n1); } .t-n5 { color: var(--n5); } .t-n6 { color: var(--n6); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); align-items: center; }
+.callout { background: var(--brass-soft); border-radius: 6px; padding: 4px 8px; font-size: 13px; margin: 0; }
+
+.item { border-left: 3px solid var(--line); padding: 2px 0 2px 11px; display: flex; flex-direction: column; gap: 4px; }
+.item.good { border-left-color: var(--jade); }
+.item.bad { border-left-color: var(--cinnabar); }
+.item.warn { border-left-color: var(--brass); }
+.item .head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.item .head strong { font-size: 14px; }
+.item p { margin: 0; font-size: 13px; }
+.item .meta { font-size: 12px; color: var(--muted); }
+
+table.ref { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.ref th, table.ref td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.ref th { color: var(--muted); font-weight: 500; font-size: 11.5px; }
+.tablewrap { overflow-x: auto; }
+
+/* Compass skins (they sit on the plan image, so they follow their own look, chosen by the user) */
+.c-nz { fill: var(--c-nz); }
+.cmp-light { --c-nz: #2f78c4; --c-n1: #c4271c; --c-n5: #8a5a2b; --c-n6: #2c8a6a; }
+.cmp-dark { --c-nz: #6fb0f0; --c-n1: #ff6a55; --c-n5: #d29a5f; --c-n6: #4fc19a; }
+.c-n1 { fill: var(--c-n1); } .c-n5 { fill: var(--c-n5); } .c-n6 { fill: var(--c-n6); }
+.cmp-light { --c-bg: #ffffff; --c-ink: #1d1d1b; --c-red: #c4271c; --c-line: #2d2d2b; --c-faint: #7d7d78; --c-good: #2c8a6a; --c-bad: #d0402f; }
+.cmp-dark { --c-bg: #050505; --c-ink: #eeede8; --c-red: #ff5b47; --c-line: #d8d7d0; --c-faint: #9b9b95; --c-good: #4fc19a; --c-bad: #ff6a55; }
+.c-bg { fill: var(--c-bg); }
+.c-ink { fill: var(--c-ink); }
+.c-red { fill: var(--c-red); }
+.c-faint { fill: var(--c-faint); }
+.c-stroke { stroke: var(--c-line); fill: none; }
+.c-sector { stroke: var(--c-red); }
+.c-good { fill: var(--c-good); }
+.c-bad { fill: var(--c-bad); }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head><body>
+
+<div class="app">
+  <header class="top">
+    <div class="titles">
+      <h1 data-i18n-html="h1"></h1>
+      <p data-i18n="sub"></p>
+    </div>
+    <div class="group" role="group" aria-label="Language 語言">
+      <button type="button" data-lang="zh" lang="zh-Hant">繁體中文</button><button type="button" data-lang="en" lang="en">English</button>
+    </div>
+  </header>
+
+  <main class="bench">
+    <div class="toolbar">
+      <button class="btn primary" id="uploadBtn" type="button" data-i18n="upload"></button>
+      <input type="file" id="fileIn" accept="image/*" hidden>
+      <button class="btn" id="sampleBtn" type="button" data-i18n="sample"></button>
+      <div class="group" role="group" data-i18n-aria="tool">
+        <button type="button" data-tool="move" aria-pressed="true" data-i18n="move"></button>
+        <button type="button" data-tool="window" aria-pressed="false" data-i18n="addWin"></button>
+        <button type="button" data-tool="room" aria-pressed="false" data-i18n="addRoom"></button>
+      </div>
+      <button class="btn" id="delBtn" type="button" disabled data-i18n="del"></button>
+    </div>
+    <div class="targets" id="targets"></div>
+    <div class="ctrl" id="ctrlPanel">
+      <div class="row">
+        <span class="label-sm" data-i18n="school"></span>
+        <div class="group" role="group" data-i18n-aria="school">
+          <button type="button" data-school="naqi" data-i18n="naqi"></button><button type="button" data-school="flying" data-i18n="flying"></button><button type="button" data-school="mansion" data-i18n="mansion"></button>
+        </div>
+        <label class="row" id="periodWrap" style="gap:6px;font-size:13px"><span data-i18n="period"></span>
+          <select id="periodIn" style="width:auto"></select></label>
+      </div>
+      <div class="rots">
+        <div class="rot"><span><i class="sw" style="background:#3b6fa8"></i><span data-i18n="rotPlan"></span></span><input type="range" id="imgRotIn" min="0" max="359" step="1" data-i18n-aria="rotPlan"><output id="imgRotOut" class="num"></output><span><button type="button" class="mini" data-rstep="img:-90">⟲</button> <button type="button" class="mini" data-rstep="img:90">⟳</button></span></div>
+        <div class="rot"><span><i class="sw" style="background:#c4271c"></i><span data-i18n="rotOutline"></span></span><input type="range" id="frameRotIn" min="0" max="359" step="0.5" data-i18n-aria="rotOutline"><output id="frameRotOut" class="num"></output><span><button type="button" class="mini" data-rstep="frame:-90">⟲</button> <button type="button" class="mini" data-rstep="frame:90">⟳</button></span></div>
+        <div class="rot"><span><i class="sw" style="background:#1b2320"></i><span data-i18n="rotCompass"></span></span><input type="range" id="southIn" min="0" max="359" step="1" data-i18n-aria="rotCompass"><output id="southOut" class="num"></output><span><button type="button" class="mini" data-rstep="cmp:-90">⟲</button> <button type="button" class="mini" data-rstep="cmp:90">⟳</button></span></div>
+      </div>
+      <div class="cmps" id="compassList"></div>
+    </div>
+    <div class="stage-wrap" id="stageWrap">
+      <svg id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="zoom" role="group" data-i18n-aria="zoom">
+        <button type="button" id="zoomIn" data-i18n-aria="zoomIn">+</button>
+        <output id="zoomOut" class="num">100%</output>
+        <button type="button" id="zoomMinus" data-i18n-aria="zoomOutL">−</button>
+        <button type="button" id="zoomFit" data-i18n="zoomFit"></button>
+      </div>
+      <span class="sample-tag" id="sampleTag" hidden data-i18n="sampleTag"></span>
+    </div>
+    <div class="hint">
+      <span data-i18n-html="hint1"></span>
+      <span data-i18n-html="hint2"></span>
+      <span data-i18n-html="hint5"></span>
+      <span data-i18n-html="hint6"></span>
+      <span data-i18n-html="hint7"></span>
+      <span data-i18n-html="hint3"></span>
+      <span data-i18n-html="hint4"></span>
+    </div>
+  </main>
+
+  <aside class="ledger">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tab-reading" aria-selected="true" data-pane="reading" data-i18n="tabReading"></button>
+      <button role="tab" id="tab-setup" aria-selected="false" data-pane="setup" data-i18n="tabSetup"></button>
+      <button role="tab" id="tab-guide" aria-selected="false" data-pane="guide" data-i18n="tabGuide"></button>
+    </div>
+    <div class="pane" id="pane-reading" role="tabpanel"></div>
+    <div class="pane" id="pane-setup" role="tabpanel" hidden>
+      <section class="block">
+        <h2 data-i18n="compass"></h2>
+        <div class="row">
+          <span class="note" data-i18n="southQuick"></span>
+          <div class="group" role="group">
+            <button type="button" data-south="0" data-i18n="up"></button><button type="button" data-south="90" data-i18n="right"></button><button type="button" data-south="180" data-i18n="down"></button><button type="button" data-south="270" data-i18n="left"></button>
+          </div>
+        </div>
+        <div class="row">
+          <span class="note" data-i18n="style"></span>
+          <div class="group" role="group">
+            <button type="button" data-skin="light" data-i18n="light"></button><button type="button" data-skin="dark" data-i18n="dark"></button>
+          </div>
+        </div>
+        <div class="checks" id="layerChecks"></div>
+      </section>
+      <section class="block">
+        <h2 data-i18n="outline"></h2>
+        <p class="note" data-i18n="outlineNote"></p>
+        <label class="row" style="gap:6px;font-size:13px"><input type="checkbox" id="centerLock"> <span data-i18n="centerLock"></span></label>
+        <div class="row"><button class="btn" id="fitFrameBtn" type="button" data-i18n="fitFrame"></button></div>
+      </section>
+      <section class="block">
+        <h2 data-i18n="frontDoor"></h2>
+        <p class="note" data-i18n="doorNote"></p>
+        <div class="row">
+          <label class="row" style="gap:6px"><input type="checkbox" id="doorManual"> <span data-i18n="doorManual"></span></label>
+          <input type="number" id="doorDeg" min="0" max="359.9" step="0.5" style="width:90px" data-i18n-aria="doorDeg">
+          <span class="note">°</span>
+        </div>
+      </section>
+      <section class="block">
+        <h2 data-i18n="occupant"></h2>
+        <p class="note" data-i18n="occNote"></p>
+        <div class="row">
+          <input type="number" id="kuaYear" min="1900" max="2100" style="width:120px" data-i18n-ph="birthYear" data-i18n-aria="birthYear">
+          <div class="group" role="group">
+            <button type="button" data-gender="m" data-i18n="male"></button><button type="button" data-gender="f" data-i18n="female"></button>
+          </div>
+          <span id="kuaOut" class="note"></span>
+        </div>
+      </section>
+      <section class="block">
+        <h2 data-i18n="furniture"></h2>
+        <div class="field"><label for="sofaRot" data-i18n="sofaFaces"></label><input type="range" id="sofaRot" min="0" max="359" step="1"><output id="sofaOut" class="num"></output></div>
+        <div class="field"><label for="bedRot" data-i18n="bedHead"></label><input type="range" id="bedRot" min="0" max="359" step="1"><output id="bedOut" class="num"></output></div>
+      </section>
+      <section class="block">
+        <h2 data-i18n="rooms"></h2>
+        <div class="list" id="roomList"></div>
+        <p class="note" data-i18n-html="roomsNote"></p>
+      </section>
+      <section class="block">
+        <h2 data-i18n="windows"></h2>
+        <div class="list" id="winList"></div>
+        <p class="note" data-i18n-html="winNote"></p>
+      </section>
+      <section class="block">
+        <button class="btn" id="resetBtn" type="button" data-i18n="clearAll"></button>
+        <p class="note" id="resetNote" hidden data-i18n="confirm"></p>
+      </section>
+    </div>
+    <div class="pane" id="pane-guide" role="tabpanel" hidden></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+let S; // state, declared early so tr() can read the language
+const en = () => S && S.lang === 'en';
+const tr = (zh, e) => en() ? e : zh;
+const pick = v => Array.isArray(v) ? (en() ? v[1] : v[0]) : v;
+
+// ---------- Interface text: [繁體中文, English] ----------
+const UI = {
+  h1: ['羅盤<span>風水</span>戶型分析', '羅盤 <span>Luopan</span> Floor Plan Reader'],
+  sub: ['將羅盤疊在戶型圖上，標出大門、窗戶及家具，按納氣、玄空飛星或八宅法逐點分析吉凶。', 'Lay a compass over your floor plan, mark the door, windows and furniture, and read Na Qi (納氣), Flying Stars (飛星) or Eight Mansions (八宅) for each spot.'],
+  upload: ['上傳戶型圖', 'Upload floor plan'], sample: ['載入示範', 'Load sample'],
+  tool: ['工具', 'Tool'], move: ['移動', 'Move'], addWin: ['+ 窗戶', '+ Window'], addRoom: ['+ 房間', '+ Room'], del: ['刪除所選', 'Delete selected'],
+  readFrom: ['分析位置', 'Read from'],
+  sampleTag: ['示範戶型，上傳你的圖則即可取代', 'Sample plan, upload yours to replace it'],
+  hint1: ['拖動標記可移動位置。', 'Drag any marker to move it.'],
+  hint2: ['拖動羅盤上的紅色<b>「南」</b>鈕轉動羅盤（南方在上為傳統排法）。', 'Drag the red <b>南 S</b> knob to turn the compass. South sits on top, the traditional Chinese way.'],
+  hint6: ['拖動圖則角上的藍色 ⟳ 鈕轉動圖則。', 'Drag the blue ⟳ knob on the plan\'s corner to turn the plan.'],
+  hint3: ['拖動沙發或床旁的小圓點可轉向。', 'Drag the small dot on the sofa or bed to turn it.'],
+  hint5: ['拖動紅框邊上的小方塊貼合外牆，拖動紅框角的 ⟳ 鈕轉動外框。', 'Drag the squares on the red outline to fit the outer walls, and its red ⟳ knob to turn the outline.'],
+  zoom: ['縮放', 'Zoom'], zoomIn: ['放大', 'Zoom in'], zoomOutL: ['縮小', 'Zoom out'], zoomFit: ['全圖', 'Fit'],
+  hint7: ['用滑鼠滾輪或右上角 + − 縮放；放大後拖動空白處可移動畫面。', 'Zoom with the mouse wheel or the + − buttons; when zoomed in, drag an empty spot to pan.'],
+  school: ['羅盤類型', 'Compass type'], flying: ['玄空飛星', 'Flying Stars 飛星'], mansion: ['八宅', 'Eight Mansions 八宅'], naqi: ['納氣', 'Na Qi 納氣'], period: ['元運', 'Period'],
+  rotPlan: ['圖則', 'Plan'], rotOutline: ['外框', 'Outline'], rotCompass: ['羅盤（南）', 'Compass (S)'],
+  southQuick: ['南方指向：', 'South points:'],
+  addCompass: ['+ 加羅盤', '+ Add compass'], resetView: ['↺ 全部重設', '↺ Reset all'], resetViewSure: ['再按一次確認重設', 'Click again to reset'], cmpSize: ['大小', 'Size'], cmpTrans: ['透明度', 'Transparency'],
+  anchorActive: ['跟隨分析位置', 'Follows reading spot'], anchorOutline: ['外框中心', 'Outline centre'], anchorDoor: ['大門', 'Front door'],
+  hint4: ['把圖片拖放到圖則上即可載入。', 'Drop an image onto the plan to load it.'],
+  tabReading: ['分析', 'Reading'], tabSetup: ['設定', 'Setup'], tabGuide: ['說明', 'Guide'],
+  compass: ['羅盤', 'Compass'], northPoints: ['北方指向', 'North points'], quick: ['快速設定：', 'Quick set:'],
+  up: ['上', 'Up'], right: ['右', 'Right'], down: ['下', 'Down'], left: ['左', 'Left'],
+  size: ['大小', 'Size'], opacity: ['透明度', 'Opacity'], style: ['樣式：', 'Style:'], light: ['淺色', 'Light'], dark: ['深色', 'Dark'],
+  frontDoor: ['大門', 'Front door'],
+  doorNote: ['向首即站在門口向外望的方向。預設由屋中心經大門量度；如大門位於斜牆，可手動設定。', 'Facing is the direction you look when standing in the doorway looking out. By default it is measured from the house centre through the door. Override it if your door sits on an angled wall.'],
+  doorManual: ['手動設定向度', 'Set facing by hand'], doorDeg: ['大門向度（度）', 'Door facing in degrees'],
+  occupant: ['居住者（選填）', 'Occupant (optional)'],
+  occNote: ['填上命卦，為床及沙發加入個人分析。如在二月四日立春前出生，請填上一年。', 'Adds a personal Gua (命卦) reading for the bed and sofa. If born before 4 February, use the previous year.'],
+  birthYear: ['出生年份', 'Birth year'], male: ['男', 'Male'], female: ['女', 'Female'],
+  furniture: ['家具', 'Furniture'], sofaFaces: ['沙發朝向', 'Sofa faces'], bedHead: ['床頭方向', 'Bed head points'],
+  rooms: ['房間', 'Rooms'], roomsNote: ['按 <b>+ 房間</b>，再在房間中央點一下即可加入。', 'Use <b>+ Room</b> and click inside a room to add its centre.'],
+  windows: ['窗戶', 'Windows'], winNote: ['按 <b>+ 窗戶</b>，再點擊圖則上每個窗戶。', 'Use <b>+ Window</b> and click on each window in the plan.'],
+  outline: ['房屋外框', 'House outline'],
+  outlineNote: ['四條紅線圍住房屋外牆，中間的十字線標出屋中心。外框四邊固定標示方位，依傳統南方在上、北方在下、東左西右，不隨羅盤轉動。外框與圖則、羅盤各自獨立，可分別移動及轉動。', 'Four red lines bound the outside walls and the cross through the middle marks the centre. The sides carry fixed labels in the Chinese convention: South on top, North at the bottom, East on the left and West on the right. They do not follow the compass. The outline, the plan and the compasses each move and turn on their own.'],
+  planRot: ['轉動房屋', 'Rotate house'], frameTilt: ['外框傾斜', 'Outline tilt'],
+  centerLock: ['屋中心跟隨外框中心', 'House centre follows the outline centre'],
+  fitFrame: ['外框重設為整張圖', 'Reset outline to the whole plan'],
+  clearAll: ['清除所有標記', 'Clear all markers'], confirm: ['再按一次確認。', 'Press again to confirm.'],
+};
+const ui = k => pick(UI[k]);
+function applyStatic() {
+  document.documentElement.lang = en() ? 'en' : 'zh-Hant';
+  document.querySelectorAll('[data-i18n]').forEach(el => el.textContent = ui(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el => el.innerHTML = ui(el.dataset.i18nHtml));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => el.placeholder = ui(el.dataset.i18nPh));
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', ui(el.dataset.i18nAria)));
+  document.querySelectorAll('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === S.lang)));
+}
+
+// ---------- Reference data ----------
+const ELS = { wood: ['木', 'Wood 木'], fire: ['火', 'Fire 火'], earth: ['土', 'Earth 土'], metal: ['金', 'Metal 金'], water: ['水', 'Water 水'] };
+const el = k => pick(ELS[k]);
+const GEN = { wood: 'fire', fire: 'earth', earth: 'metal', metal: 'water', water: 'wood' };
+const CTL = { wood: 'earth', earth: 'water', water: 'fire', fire: 'metal', metal: 'wood' };
+// Later Heaven (後天) order by direction: N, NE, E, SE, S, SW, W, NW
+const TRI = [
+  { zh: '坎', py: 'Kan', img: ['水', 'Water'], el: 'water', dir: 'N', dirZh: '北', dirEn: 'North', fam: ['中男', 'Middle son'], body: ['耳、腎', 'Ears, kidneys'], num: 1, area: ['事業、人生路向', 'Career and life path'], season: ['冬', 'Winter'], color: ['黑、深藍', 'Black, deep blue'] },
+  { zh: '艮', py: 'Gen', img: ['山', 'Mountain'], el: 'earth', dir: 'NE', dirZh: '東北', dirEn: 'Northeast', fam: ['少男', 'Youngest son'], body: ['手', 'Hands'], num: 8, area: ['知識、修養', 'Knowledge and self-cultivation'], season: ['冬末春初', 'Late winter'], color: ['土黃', 'Earthy yellow'] },
+  { zh: '震', py: 'Zhen', img: ['雷', 'Thunder'], el: 'wood', dir: 'E', dirZh: '東', dirEn: 'East', fam: ['長男', 'Eldest son'], body: ['足、肝', 'Feet, liver'], num: 3, area: ['家庭、健康', 'Family and health'], season: ['春', 'Spring'], color: ['綠', 'Green'] },
+  { zh: '巽', py: 'Xun', img: ['風', 'Wind'], el: 'wood', dir: 'SE', dirZh: '東南', dirEn: 'Southeast', fam: ['長女', 'Eldest daughter'], body: ['股', 'Thighs'], num: 4, area: ['財富', 'Wealth and abundance'], season: ['春末夏初', 'Late spring'], color: ['綠、紫', 'Green, purple'] },
+  { zh: '離', py: 'Li', img: ['火', 'Fire'], el: 'fire', dir: 'S', dirZh: '南', dirEn: 'South', fam: ['中女', 'Middle daughter'], body: ['目、心', 'Eyes, heart'], num: 9, area: ['名聲', 'Fame and reputation'], season: ['夏', 'Summer'], color: ['紅', 'Red'] },
+  { zh: '坤', py: 'Kun', img: ['地', 'Earth'], el: 'earth', dir: 'SW', dirZh: '西南', dirEn: 'Southwest', fam: ['母', 'Mother'], body: ['腹', 'Abdomen'], num: 2, area: ['婚姻、感情', 'Love and partnership'], season: ['夏末', 'Late summer'], color: ['黃、米色', 'Yellow, beige'] },
+  { zh: '兌', py: 'Dui', img: ['澤', 'Lake'], el: 'metal', dir: 'W', dirZh: '西', dirEn: 'West', fam: ['少女', 'Youngest daughter'], body: ['口', 'Mouth'], num: 7, area: ['子女、創意', 'Children and creativity'], season: ['秋', 'Autumn'], color: ['白、金屬色', 'White, metallic'] },
+  { zh: '乾', py: 'Qian', img: ['天', 'Heaven'], el: 'metal', dir: 'NW', dirZh: '西北', dirEn: 'Northwest', fam: ['父', 'Father'], body: ['首', 'Head'], num: 6, area: ['貴人、出行', 'Mentors and travel'], season: ['秋末冬初', 'Late autumn'], color: ['白、金', 'White, gold'] },
+];
+// Trigram lines as bits: bottom = 1, middle = 2, top = 4 (1 = solid yang line)
+const BITS = [2, 4, 1, 6, 5, 0, 3, 7];
+const EARLY = ['坤', '震', '離', '兌', '乾', '巽', '坎', '艮']; // Early Heaven (先天) at the same eight positions
+const EAST_GROUP = new Set([0, 2, 3, 4]);
+// Eight Mansions stars keyed by which lines change from the house trigram
+const STARS = {
+  4: { zh: '生氣', en: 'Vitality', el: 'wood', good: true, rank: 1, star: '貪狼',
+    house: ['主進取、機遇與財運。', 'Drive, opportunity and income.'], rest: ['氣氛活躍，宜傾談及計劃。', 'Lively and sociable, good for talk and plans.'], sleep: ['充滿活力，適合需要動力的人。', 'Energising; best for someone who needs motivation.'],
+    use: ['大門、書房、辦公室、客廳', 'Main door, study, office, living room'] },
+  3: { zh: '天醫', en: 'Heavenly Doctor', el: 'earth', good: true, rank: 2, star: '巨門',
+    house: ['主健康、康復及貴人相助。', 'Health, recovery and helpful people.'], rest: ['平和療癒，宜放鬆休息。', 'Calm and healing, good for unwinding.'], sleep: ['有助安睡及康復，是床位最佳方位之一。', 'Restorative sleep and recovery, one of the best for a bed.'],
+    use: ['睡房、飯廳、藥櫃', 'Bedroom, dining room, medicine cabinet'] },
+  7: { zh: '延年', en: 'Longevity', el: 'metal', good: true, rank: 3, star: '武曲',
+    house: ['主和睦、感情長久及穩定支持。', 'Harmony, lasting relationships and steady support.'], rest: ['家庭溫馨，利夫妻相處。', 'Warm family time, good for couples.'], sleep: ['利感情及婚姻。', 'Supports partnership and marriage.'],
+    use: ['主人房、家庭廳', 'Master bedroom, family room'] },
+  0: { zh: '伏位', en: 'Stability', el: 'wood', good: true, rank: 4, star: '輔弼',
+    house: ['平穩安靜，利專注及自我提升。', 'Steady and quiet, good for focus and personal growth.'], rest: ['宜靜思閱讀。', 'Quiet reflection and reading.'], sleep: ['睡得安穩。', 'Peaceful, settled sleep.'],
+    use: ['睡房、靜坐室、佛堂', 'Bedroom, meditation, prayer room'] },
+  1: { zh: '禍害', en: 'Mishaps', el: 'earth', good: false, rank: 1, star: '祿存', remedy: 'metal',
+    house: ['主小挫折、口角及小破財。', 'Minor setbacks, petty disputes and small losses.'], rest: ['容易口角。', 'Prone to bickering.'], sleep: ['睡不安寧，多小病痛。', 'Restless sleep and small health complaints.'],
+    use: ['浴室、儲物室、洗衣間', 'Bathroom, storage, laundry'] },
+  5: { zh: '六煞', en: 'Six Killings', el: 'water', good: false, rank: 2, star: '文曲', remedy: 'wood',
+    house: ['主桃色是非、感情不和、官非及漏財。', 'Scandal, relationship strain, legal trouble and money leaks.'], rest: ['易生閒話，難以專心。', 'Gossip and distraction.'], sleep: ['感情不睦，情緒不穩。', 'Relationship strain and unsettled emotions.'],
+    use: ['浴室、洗衣間、儲物室', 'Bathroom, laundry, storage'] },
+  6: { zh: '五鬼', en: 'Five Ghosts', el: 'fire', good: false, rank: 3, star: '廉貞', remedy: 'earth',
+    house: ['主盜竊、火險、是非及背叛。', 'Theft, fire risk, gossip and betrayal.'], rest: ['易生爭執及緊張。', 'Arguments and tension.'], sleep: ['焦慮多夢，易起爭吵。', 'Anxiety, bad dreams and quarrels.'],
+    use: ['廚房爐灶（以火壓煞）、儲物室', 'Kitchen stove (fire suppresses it), storage'] },
+  2: { zh: '絕命', en: 'Total Loss', el: 'metal', good: false, rank: 4, star: '破軍', remedy: 'water',
+    house: ['最凶：主重病及大破財。', 'The most severe: serious illness and major loss.'], rest: ['沉重乏力。', 'Heavy, low energy.'], sleep: ['耗損精神，對健康最不利。', 'Draining; the worst position for health.'],
+    use: ['廁所、儲物室、廚房', 'Toilet, storeroom, kitchen'] },
+};
+const STAR_ORDER = [4, 3, 7, 0, 1, 5, 6, 2];
+// Nine stars of Xuan Kong Flying Stars (玄空飛星)
+const NINE = {
+  1: { zh: '一白', star: '貪狼', el: 'water', mean: ['主事業、人緣及智慧。', 'Career, networking and wisdom.'] },
+  2: { zh: '二黑', star: '巨門', el: 'earth', mean: ['主疾病，尤其腸胃及婦科。', 'Illness, especially the stomach and women\'s health.'], remedy: ['銅葫蘆、六帝錢或鹽水瓶（金洩土）', 'a brass gourd, six coins or a salt-water bottle (metal drains earth)'] },
+  3: { zh: '三碧', star: '祿存', el: 'wood', mean: ['主口舌是非及官司。', 'Quarrels, gossip and lawsuits.'], remedy: ['紅色擺設或燈光（火洩木）', 'red items or warm lighting (fire drains wood)'] },
+  4: { zh: '四綠', star: '文曲', el: 'wood', mean: ['主文昌、考試及桃花。', 'Study, exams and romance.'] },
+  5: { zh: '五黃', star: '廉貞', el: 'earth', mean: ['主災禍及疾病，為最凶之星。', 'Misfortune and illness, the most dangerous star.'], remedy: ['銅葫蘆、六帝錢或鹽水瓶，保持安靜勿動土', 'a brass gourd, six coins or a salt-water bottle; keep the area quiet'] },
+  6: { zh: '六白', star: '武曲', el: 'metal', mean: ['主權力、貴人及偏財。', 'Authority, mentors and windfalls.'] },
+  7: { zh: '七赤', star: '破軍', el: 'metal', mean: ['主盜賊、破財及口舌。', 'Theft, loss and sharp words.'], remedy: ['藍黑色或靜水擺設（水洩金）', 'blue or black items, or still water (water drains metal)'] },
+  8: { zh: '八白', star: '左輔', el: 'earth', mean: ['主正財、置業及穩定。', 'Steady wealth and property.'] },
+  9: { zh: '九紫', star: '右弼', el: 'fire', mean: ['主喜慶、名聲及姻緣。', 'Celebration, fame and marriage.'] },
+};
+const nCls = n => n <= 4 ? 'n1' : n === 5 ? 'n5' : 'n6';
+const NUM_HOME = { 1: 0, 2: 5, 3: 2, 4: 3, 6: 7, 7: 6, 8: 1, 9: 4 }; // Lo Shu palace of each number
+const FLY_PATH = [7, 6, 1, 4, 0, 5, 2, 3]; // after the centre: NW, W, NE, S, N, SW, E, SE
+const wrap9 = n => ((n - 1) % 9 + 9) % 9 + 1;
+function fly(c, fwd) { const p = []; FLY_PATH.forEach((pal, j) => p[pal] = wrap9(fwd ? c + j + 1 : c - j - 1)); return { c, p, fwd }; }
+function flyDir(n, b) {
+  // forward when the mountain in the same 元龍 position of that number's home palace is yang
+  const m = mtn24(b), i = sec8(b), k = ((m - (3 * i - 1)) % 24 + 24) % 24;
+  if (n === 5) return MTN_RED.has(MTN[m]);
+  const mm = ((3 * NUM_HOME[n] - 1 + k) % 24 + 24) % 24;
+  return MTN_RED.has(MTN[mm]);
+}
+function flyChart(P, sitting, facing) {
+  const base = fly(P, true), si = sec8(sitting), fi = sec8(facing);
+  const mc = base.p[si], wc = base.p[fi];
+  const mtnS = fly(mc, flyDir(mc, sitting)), wat = fly(wc, flyDir(wc, facing));
+  let pattern = null;
+  if (mtnS.p[si] === P && wat.p[fi] === P) pattern = ['旺山旺向', 'Prosperous mountain and facing (旺山旺向): the best chart for both health and wealth.'];
+  else if (mtnS.p[fi] === P && wat.p[si] === P) pattern = ['上山下水', 'Reversed stars (上山下水): health and wealth are both weak unless the land outside compensates.'];
+  else if (mtnS.p[fi] === P && wat.p[fi] === P) pattern = ['雙星會向', 'Double stars at the facing (雙星會向): good for wealth, needs open space in front.'];
+  else if (mtnS.p[si] === P && wat.p[si] === P) pattern = ['雙星會坐', 'Double stars at the sitting (雙星會坐): good for people and health, needs support behind.'];
+  return { base, mtn: mtnS, wat, si, fi, pattern };
+}
+function timely(n, P) {
+  const d = ((n - P) % 9 + 9) % 9;
+  if (d === 0) return { zh: '當旺', en: 'prosperous now', good: true };
+  if (d === 1) return { zh: '生氣', en: 'growing', good: true };
+  if (d === 2) return { zh: '進氣', en: 'coming', good: true };
+  if (d === 8) return { zh: '退氣', en: 'retreating', good: false };
+  return { zh: '衰死', en: 'declining', good: false };
+}
+// 納氣 (零正): the Lo Shu number of each palace never moves; each period decides which palaces are 正神 (want mountains)
+// and which are 零神 (want water and openings). 上元 1-4 and 下元 6-9 swap sides; 五運 is split, treated here as 下元.
+const LOSHU = [1, 8, 3, 4, 9, 2, 7, 6]; // by sector N, NE, E, SE, S, SW, W, NW
+function naqiDefault(P) { const upper = P <= 4; return LOSHU.map(n => upper ? n <= 4 : n >= 6); }
+function naqi(P) {
+  // each period can carry its own 正 / 零 layout (S.naqiMap), set by tapping the chart
+  const own = S.naqiMap && Array.isArray(S.naqiMap[P]) && S.naqiMap[P].length === 8 ? S.naqiMap[P] : null;
+  return { zheng: own || naqiDefault(P), custom: !!own, mainZ: P === 5 ? -1 : NUM_HOME[P], mainL: P === 5 ? -1 : NUM_HOME[10 - P], upper: P <= 4 };
+}
+const nqB = (n, z) => `<span class="nb ${z ? 'nz' : 'n1'}">${n}</span>`;
+// 八卦得運／失運 (by sector N, NE, E, SE, S, SW, W, NW)
+const GUA_LUCK = [
+  { g: '坎', lose: ['耳疾、腎病、膀胱病、生殖系統疾病、性病、婦女病、血液疾病、心理病、水災、桃花、不孕、流產、血光、損丁、破財', 'ear trouble, kidney and bladder illness, reproductive and blood disorders, mental strain, flooding, affairs, infertility, miscarriage, injury, loss of people and money'],
+    win: ['旺丁財、出才士、發文名、中科甲', 'growth in family and wealth, talented people, literary fame, exam success'] },
+  { g: '艮', lose: ['結石、便秘、血管阻塞、腰痛、脾胃病、駝背、皮膚斑疹', 'stones, constipation, blocked blood vessels, back pain, stomach and spleen illness, hunched back, skin rashes'],
+    win: ['旺田產、得不動產、發財、旺丁、升官進財', 'land and property, wealth, family growth, promotion and income'] },
+  { g: '震', lose: ['肝膽病、甲狀腺、頭痛、腳氣疾、神經痛、雷殛、車禍、意外、鬥毆、損丁、敗財', 'liver and gallbladder illness, thyroid, headaches, foot ailments, nerve pain, lightning, car accidents, accidents, fights, loss of people and money'],
+    win: ['進財、富貴、添丁、聲宏名高', 'income, wealth and status, new children, a strong reputation'] },
+  { g: '巽', lose: ['肝膽病、坐骨神經痛、中風、風疾、流產、產厄、自縊、損丁、敗財', 'liver and gallbladder illness, sciatica, stroke, wind ailments, miscarriage, birth trouble, suicide, loss of people and money'],
+    win: ['出文士、得女財、旺科名、升學', 'scholars, wealth through women, academic honours, further study'] },
+  { g: '離', lose: ['眼病、心臟病、灼傷、心律不整、高血壓', 'eye disease, heart disease, burns, irregular heartbeat, high blood pressure'],
+    win: ['前途光明、事來成功、聲名大起、財源廣進', 'a bright future, success, rising fame, wide sources of income'] },
+  { g: '坤', lose: ['腹病、脾胃疾病、精神病、邪症、皮膚病、胃癌、不孕、流產、憂鬱症、易老化、皮膚斑疹、損丁、敗財', 'abdominal, stomach and spleen illness, mental illness, strange ailments, skin disease, stomach cancer, infertility, miscarriage, depression, early ageing, rashes, loss of people and money'],
+    win: ['得女財、田產之財', 'wealth through women, wealth from land'] },
+  { g: '兌', lose: ['口喉病、肺病、啞吧、兔唇、大腸病、呼吸系統、骨折、性病、刀傷', 'mouth and throat illness, lung disease, loss of voice, cleft lip, bowel illness, breathing problems, fractures, sexual disease, knife wounds'],
+    win: ['出武貴、進財、成大功、立大業、有聲名', 'military or official rank, income, great achievement, a lasting enterprise, reputation'] },
+  { g: '乾', lose: ['頭痛、腦疾、肺病、骨病、心臟', 'headaches, brain disorders, lung disease, bone illness, heart trouble'],
+    win: ['出武貴、進財、旺丁、富貴雙全、名利雙收', 'military or official rank, income, family growth, wealth with status, fame with fortune'] },
+];
+const PERIODS = [[1, 1864], [2, 1884], [3, 1904], [4, 1924], [5, 1944], [6, 1964], [7, 1984], [8, 2004], [9, 2024]];
+const REMEDY_ITEM = {
+  metal: ['銅器或金屬擺設（如風鈴、銅碗）', 'brass or metal objects (a wind chime, a bowl)'],
+  wood: ['健康的綠色植物', 'healthy green plants'],
+  earth: ['陶瓷、石頭或水晶', 'ceramics, stones or crystals'],
+  water: ['小型水景，或藍黑色調（睡房不宜）', 'a small water feature, or blues and black (not in a bedroom)'],
+};
+// 24 Mountains (二十四山) from North clockwise; red = yang mountains as printed on the luopan
+const MTN = ['子','癸','丑','艮','寅','甲','卯','乙','辰','巽','巳','丙','午','丁','未','坤','申','庚','酉','辛','戌','乾','亥','壬'];
+const MTN_PY = ['Zi','Gui','Chou','Gen','Yin','Jia','Mao','Yi','Chen','Xun','Si','Bing','Wu','Ding','Wei','Kun','Shen','Geng','You','Xin','Xu','Qian','Hai','Ren'];
+const MTN_RED = new Set(['壬','亥','乾','庚','申','坤','丙','巳','巽','甲','寅','艮']);
+const ORGAN = ['膽經','腎','肝經','手','肺經','膽','大腸經','肝','胃經','股','脾經','小腸','心經','心','小腸經','腹','膀胱經','大腸','腎經','肺','心包經','首','三焦經','膀胱'];
+const ORGAN_EN = ['Gallbladder meridian','Kidneys','Liver meridian','Hands','Lung meridian','Gallbladder','Large intestine meridian','Liver','Stomach meridian','Thighs','Spleen meridian','Small intestine','Heart meridian','Heart','Small intestine meridian','Abdomen','Bladder meridian','Large intestine','Kidney meridian','Lungs','Pericardium meridian','Head','Triple burner meridian','Bladder'];
+const ROOM_TYPES = {
+  living: { label: ['客廳', 'Living room'], good: [4, 7, 3] },
+  bedroom: { label: ['睡房', 'Bedroom'], good: [3, 7, 0, 4] },
+  kitchen: { label: ['廚房', 'Kitchen'], good: [6, 2, 5, 1], note: ['爐灶設於凶方，即「坐凶向吉」。', 'A stove in a bad sector "sits on the bad and faces the good" (坐凶向吉).'] },
+  bath: { label: ['浴室', 'Bathroom'], good: [1, 5, 6, 2], note: ['廁所宜設於凶方，把凶氣沖走。', 'Toilets belong in bad sectors, where they flush the bad qi away.'] },
+  study: { label: ['書房', 'Study'], good: [4, 0, 3] },
+  dining: { label: ['飯廳', 'Dining'], good: [3, 7, 4] },
+  other: { label: ['其他', 'Other'], good: [] },
+};
+
+// ---------- Helpers ----------
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = a => ((a % 360) + 360) % 360;
+const sec8 = b => Math.floor(norm(b + 22.5) / 45) % 8;
+const mtn24 = b => Math.floor(norm(b + 7.5) / 15) % 24;
+const angDiff = (a, b) => { const d = Math.abs(norm(a) - norm(b)); return d > 180 ? 360 - d : d; };
+const fmt = b => norm(b).toFixed(1) + '°';
+const starAt = (guaIdx, dirIdx) => STARS[BITS[guaIdx] ^ BITS[dirIdx]];
+let uid = 1; const newId = p => p + (Date.now().toString(36)) + (uid++);
+function relation(starEl, palaceEl) {
+  const s = el(starEl), p = el(palaceEl);
+  if (starEl === palaceEl) return { strong: true, text: tr('同氣比和，星力增強', 'same element, so it is strengthened (比和)') };
+  if (GEN[palaceEl] === starEl) return { strong: true, text: tr(`${p}宮生${s}星，星力增強`, 'the palace feeds the star, so it is strengthened (生)') };
+  if (CTL[palaceEl] === starEl) return { strong: false, text: tr(`${p}宮剋${s}星，星力受制`, 'the palace controls the star, so it is restrained (剋)') };
+  if (GEN[starEl] === palaceEl) return { strong: false, text: tr(`${s}星生${p}宮，星力外洩`, 'the star feeds the palace, so it is weakened (洩)') };
+  return { strong: false, text: tr(`${s}星剋${p}宮，星力耗損`, 'the star fights the palace, so it is worn down (耗)') };
+}
+function kuaOf(year, g) {
+  year = parseInt(year, 10); if (!year || year < 1900 || year > 2100) return null;
+  let k = g === 'f' ? (year % 9 + 4) % 9 : (11 - year % 9) % 9; if (k === 0) k = 9;
+  const num = k; if (k === 5) k = g === 'f' ? 8 : 2;
+  const map = { 1: 0, 2: 5, 3: 2, 4: 3, 6: 7, 7: 6, 8: 1, 9: 4 };
+  return { num, idx: map[k] };
+}
+
+// ---------- Sample plan ----------
+function samplePlanSVG() {
+  const W = 900, H = 640;
+  const wall = 'stroke="#222" stroke-width="8" stroke-linecap="square" fill="none"';
+  const thin = 'stroke="#222" stroke-width="4" fill="none"';
+  const win = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fff" stroke-width="10"/><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#4a7fb5" stroke-width="3"/>` +
+    (x1 === x2 ? `<line x1="${x1-5}" y1="${y1}" x2="${x1-5}" y2="${y2}" stroke="#222" stroke-width="1.5"/><line x1="${x1+5}" y1="${y1}" x2="${x1+5}" y2="${y2}" stroke="#222" stroke-width="1.5"/>`
+      : `<line x1="${x1}" y1="${y1-5}" x2="${x2}" y2="${y2-5}" stroke="#222" stroke-width="1.5"/><line x1="${x1}" y1="${y1+5}" x2="${x2}" y2="${y2+5}" stroke="#222" stroke-width="1.5"/>`);
+  const label = (x, y, t, s = 17) => `<text x="${x}" y="${y}" font-family="Helvetica, Arial, sans-serif" font-size="${s}" fill="#555" text-anchor="middle">${t}</text>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+  <rect width="${W}" height="${H}" fill="#ffffff"/>
+  <g fill="#f4f1ea"><rect x="40" y="40" width="820" height="560"/></g>
+  <rect x="480" y="40" width="160" height="160" fill="#e8eef2"/>
+  <path d="M40 40 H860 V600 H440 M380 600 H40 Z" ${wall}/>
+  <path d="M40 300 H230 M330 300 H480" ${thin}/>
+  <path d="M280 40 V170" ${thin}/>
+  <path d="M480 40 V250 M480 300 V600" ${thin}/>
+  <path d="M480 200 H640 M640 40 V330 M640 330 H700 M770 330 H860" ${thin}/>
+  <path d="M480 330 H580" ${thin}/>
+  <path d="M580 200 V160" ${thin}/>
+  <path d="M380 600 A60 60 0 0 1 440 540 L440 600" stroke="#222" stroke-width="2" fill="none"/>
+  ${win(120, 40, 200, 40)}${win(340, 40, 420, 40)}${win(530, 40, 590, 40)}${win(860, 120, 860, 220)}${win(860, 420, 860, 520)}${win(600, 600, 740, 600)}${win(40, 400, 40, 500)}
+  <rect x="64" y="64" width="190" height="34" fill="none" stroke="#999" stroke-width="2"/>
+  <rect x="700" y="400" width="130" height="150" fill="none" stroke="#999" stroke-width="2"/><rect x="800" y="410" width="22" height="130" fill="none" stroke="#999" stroke-width="1.5"/>
+  <rect x="68" y="400" width="40" height="150" fill="none" stroke="#999" stroke-width="2"/>
+  <rect x="330" y="120" width="100" height="60" rx="6" fill="none" stroke="#999" stroke-width="2"/>
+  <rect x="500" y="60" width="50" height="40" rx="18" fill="none" stroke="#999" stroke-width="2"/>
+  ${label(160, 200, 'KITCHEN')}${label(380, 230, 'DINING')}${label(260, 380, 'LIVING')}${label(560, 140, 'BATH', 14)}${label(750, 260, 'STUDY')}${label(620, 470, 'MASTER BED')}${label(560, 270, 'HALL', 13)}${label(410, 628, 'ENTRY', 13)}
+  </svg>`;
+  return { src: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), w: W, h: H };
+}
+function sampleNames(lang) {
+  const z = lang !== 'en';
+  return {
+    rooms: z ? ['廚房', '飯廳', '客廳', '浴室', '書房', '主人房'] : ['Kitchen', 'Dining', 'Living', 'Bath', 'Study', 'Master bed'],
+    wins: z ? ['廚房', '飯廳', '浴室', '書房', '床側', '床前', '客廳'] : ['Kitchen', 'Dining', 'Bath', 'Study', 'Bed side', 'Bed front', 'Living'],
+  };
+}
+function sampleState(lang = 'zh') {
+  const img = samplePlanSVG(), n = sampleNames(lang);
+  return {
+    lang,
+    img: { ...img, sample: true },
+    v: 2, nq: 1, school: 'naqi', period: 9, north: 188, skin: 'light', imgRot: 0, centerLock: true,
+    compasses: [{ id: 'c1', anchor: 'active', size: 50, opacity: 55 }],
+    frame: { cx: 450, cy: 320, w: 820, h: 560, rot: 0 },
+    layers: { frame: true, degrees: true, mountains: true, organs: true, early: true, stars: true, rays: true },
+    doorManual: false, doorDeg: 180,
+    kua: { year: '', gender: 'm' },
+    center: { x: 450, y: 320 }, door: { x: 410, y: 600 },
+    sofa: { x: 92, y: 470, rot: 90 }, bed: { x: 765, y: 475, rot: 90 },
+    rooms: [
+      { id: 'r1', name: n.rooms[0], type: 'kitchen', x: 160, y: 170 },
+      { id: 'r2', name: n.rooms[1], type: 'dining', x: 380, y: 200 },
+      { id: 'r3', name: n.rooms[2], type: 'living', x: 260, y: 450 },
+      { id: 'r4', name: n.rooms[3], type: 'bath', x: 560, y: 110 },
+      { id: 'r5', name: n.rooms[4], type: 'study', x: 750, y: 200 },
+      { id: 'r6', name: n.rooms[5], type: 'bedroom', x: 640, y: 420 },
+    ],
+    windows: [
+      { id: 'w1', name: n.wins[0], x: 160, y: 40 }, { id: 'w2', name: n.wins[1], x: 380, y: 40 }, { id: 'w3', name: n.wins[2], x: 560, y: 40 },
+      { id: 'w4', name: n.wins[3], x: 860, y: 170 }, { id: 'w5', name: n.wins[4], x: 860, y: 470 }, { id: 'w6', name: n.wins[5], x: 670, y: 600 },
+      { id: 'w7', name: n.wins[6], x: 40, y: 450 },
+    ],
+    target: 'center', tool: 'move', selected: null, tab: 'reading',
+  };
+}
+
+// ---------- State ----------
+const KEY = 'luopan-reader-v1';
+S = sampleState('zh');
+try {
+  const raw = localStorage.getItem(KEY);
+  if (raw) { const saved = JSON.parse(raw); if (saved && saved.img && saved.center) { S = Object.assign(sampleState(saved.lang || 'zh'), saved, { tool: 'move', selected: null }); if (!saved.nq) S.nq = 0; } }
+} catch (e) { /* storage unavailable */ }
+if (S.lang !== 'en') S.lang = 'zh';
+function defaultFrame(img) { return { cx: img.w / 2, cy: img.h / 2, w: img.w * 0.9, h: img.h * 0.9, rot: 0 }; }
+if (!S.img.sample && S.frame && S.frame.w === 820 && S.frame.h === 560 && S.img.w !== 900) S.frame = defaultFrame(S.img);
+S.layers = Object.assign({ frame: true }, S.layers);
+if (!S.nq) { S.school = 'naqi'; S.nq = 1; } // 納氣 became the default compass
+if (S.school !== 'mansion' && S.school !== 'flying') S.school = 'naqi';
+if (!(S.period >= 1 && S.period <= 9)) S.period = 9;
+if (S.v !== 2) {
+  // older saves: the outline turned with the plan and there was one compass
+  if (S.img.sample) { const tab = S.tab; S = sampleState(S.lang); S.tab = tab; }
+  else {
+    const r = (S.planRot || 0) * Math.PI / 180, { w, h } = S.img, f = S.frame;
+    const dx = f.cx - w / 2, dy = f.cy - h / 2;
+    S.frame = { ...f, cx: w / 2 + dx * Math.cos(r) - dy * Math.sin(r), cy: h / 2 + dx * Math.sin(r) + dy * Math.cos(r), rot: norm((f.rot || 0) + (S.planRot || 0)) };
+    S.imgRot = S.planRot || 0;
+    S.compasses = [{ id: 'c1', anchor: 'active', size: S.size || 50, opacity: S.opacity || 55 }];
+  }
+  S.v = 2; delete S.planRot; delete S.size; delete S.opacity;
+}
+let saveT = 0;
+function save() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(KEY, JSON.stringify(S)); }
+    catch (e) { try { localStorage.setItem(KEY, JSON.stringify({ ...S, img: sampleState(S.lang).img })); } catch (e2) { /* ignore */ } }
+  }, 300);
+}
+
+// ---------- Geometry ----------
+const screenAng = (a, b) => norm(Math.atan2(b.x - a.x, -(b.y - a.y)) * 180 / Math.PI);
+// World = what is on screen. S.imgRot turns the plan image (with its markers) about its middle;
+// S.frame (the outline) and the compasses live in world space, and S.north is where north points on screen.
+const northImg = () => S.north - S.imgRot;
+function toWorld(p) { const a = S.imgRot * Math.PI / 180, { w, h } = S.img, dx = p.x - w / 2, dy = p.y - h / 2; return { x: w / 2 + dx * Math.cos(a) - dy * Math.sin(a), y: h / 2 + dx * Math.sin(a) + dy * Math.cos(a) }; }
+function toImage(p) { const a = -S.imgRot * Math.PI / 180, { w, h } = S.img, dx = p.x - w / 2, dy = p.y - h / 2; return { x: w / 2 + dx * Math.cos(a) - dy * Math.sin(a), y: h / 2 + dx * Math.sin(a) + dy * Math.cos(a) }; }
+const bearing = (a, b) => norm(screenAng(a, b) - northImg());
+const toBearing = rot => norm(rot - northImg());
+function frameAxes(f) { const a = f.rot * Math.PI / 180; return { ux: [Math.cos(a), Math.sin(a)], uy: [-Math.sin(a), Math.cos(a)] }; }
+function fromLocal(f, lx, ly) { const { ux, uy } = frameAxes(f); return { x: f.cx + lx * ux[0] + ly * uy[0], y: f.cy + lx * ux[1] + ly * uy[1] }; }
+function toLocal(f, p) { const { ux, uy } = frameAxes(f); const dx = p.x - f.cx, dy = p.y - f.cy; return { x: dx * ux[0] + dy * ux[1], y: dx * uy[0] + dy * uy[1] }; }
+function targetList() {
+  const t = [{ key: 'center', zh: '中', label: tr('屋中心', 'House centre'), pt: S.center }, { key: 'door', zh: '門', label: tr('大門', 'Front door'), pt: S.door }];
+  S.rooms.forEach(r => t.push({ key: 'room:' + r.id, zh: '房', label: r.name || tr('房間', 'Room'), pt: r, room: r }));
+  t.push({ key: 'sofa', zh: '沙', label: tr('沙發', 'Sofa'), pt: S.sofa }, { key: 'bed', zh: '床', label: tr('床', 'Bed'), pt: S.bed });
+  return t;
+}
+function activeTarget() { return targetList().find(t => t.key === S.target) || targetList()[0]; }
+function doorFacingAuto() { return bearing(S.center, S.door); }
+function doorFacing() { return S.doorManual ? norm(+S.doorDeg || 0) : doorFacingAuto(); }
+function house() {
+  const facing = doorFacing(), sitting = norm(facing + 180);
+  const gua = sec8(sitting);
+  return { facing, sitting, gua, tri: TRI[gua], east: EAST_GROUP.has(gua) };
+}
+
+// ---------- Compass (drawn in a 500-unit radius, N up; the luopan itself stays in Chinese) ----------
+const R = { hub: 24, early: 88, later: 170, dir: 240, organ: 305, mtn: 385, deg: 478 };
+const P = (b, r) => [r * Math.sin(b * Math.PI / 180), -r * Math.cos(b * Math.PI / 180)];
+function wedge(b0, b1, r0, r1) {
+  const [x0, y0] = P(b0, r1), [x1, y1] = P(b1, r1), [x2, y2] = P(b1, r0), [x3, y3] = P(b0, r0);
+  const large = (b1 - b0) > 180 ? 1 : 0;
+  return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r1} ${r1} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} L${x2.toFixed(2)} ${y2.toFixed(2)} A${r0} ${r0} 0 ${large} 0 ${x3.toFixed(2)} ${y3.toFixed(2)}Z`;
+}
+const radialText = (b, r, txt, size, cls, extra = '') =>
+  `<text transform="rotate(${b}) translate(0 ${-r})" font-size="${size}" class="${cls}" text-anchor="middle" dominant-baseline="central" ${extra}>${txt}</text>`;
+function trigramLines(b, r, bits, w = 46) {
+  let s = `<g transform="rotate(${b}) translate(0 ${-r})">`;
+  for (let i = 0; i < 3; i++) {
+    const y = 12 - i * 12; // bottom line is nearest the centre
+    if (bits & (1 << i)) s += `<rect x="${-w/2}" y="${y - 3}" width="${w}" height="6" class="c-ink"/>`;
+    else s += `<rect x="${-w/2}" y="${y - 3}" width="${w*0.42}" height="6" class="c-ink"/><rect x="${w*0.08}" y="${y - 3}" width="${w*0.42}" height="6" class="c-ink"/>`;
+  }
+  return s + '</g>';
+}
+function outerR() { const L = S.layers; return L.degrees ? R.deg : (L.mountains ? R.mtn : (L.organs ? R.organ : R.dir)); }
+function buildCompass(h) {
+  const L = S.layers;
+  const outer = outerR();
+  let s = `<circle r="${outer}" class="c-bg"/>`;
+  const FS = S.school === 'flying' ? flyChart(S.period, h.sitting, h.facing) : null;
+  const NQ = S.school === 'naqi' ? naqi(S.period) : null;
+  if (L.stars && NQ) for (let i = 0; i < 8; i++) {
+    const main = i === NQ.mainZ || i === NQ.mainL;
+    s += `<path d="${wedge(i * 45 - 22.5, i * 45 + 22.5, R.later, R.dir)}" class="${NQ.zheng[i] ? 'c-nz' : 'c-n1'}" fill-opacity="${main ? 0.24 : 0.1}"/>`;
+  }
+  if (L.stars && !FS && !NQ) for (let i = 0; i < 8; i++) {
+    const st = starAt(h.gua, i);
+    s += `<path d="${wedge(i * 45 - 22.5, i * 45 + 22.5, R.later, R.dir)}" class="${st.good ? 'c-good' : 'c-bad'}" fill-opacity="${0.12 + st.rank * 0.05}"/>`;
+  }
+  const rings = [R.hub, L.early ? R.early : null, R.later, R.dir, L.organs ? R.organ : null, L.mountains ? R.mtn : null, L.degrees ? R.deg : null].filter(Boolean);
+  rings.forEach(r => { s += `<circle r="${r}" class="c-stroke" stroke-width="${r === outer ? 3 : 1.6}"/>`; });
+  for (let i = 0; i < 8; i++) {
+    const b = i * 45 + 22.5, [x0, y0] = P(b, R.hub), [x1, y1] = P(b, outer);
+    s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" class="c-sector" stroke-width="2.4"/>`;
+  }
+  const inner24 = L.organs ? R.dir : R.organ;
+  if (L.organs || L.mountains) for (let i = 0; i < 24; i++) {
+    if (i % 3 === 1) continue;
+    const b = i * 15 + 7.5; if ((b - 22.5) % 45 === 0) continue;
+    const [x0, y0] = P(b, inner24), [x1, y1] = P(b, L.mountains ? R.mtn : R.organ);
+    s += `<line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" class="c-stroke" stroke-width="1.2"/>`;
+  }
+  const font = 'font-family="Noto Serif TC, Songti TC, PMingLiU, serif"';
+  for (let i = 0; i < 8; i++) {
+    const b = i * 45, t = TRI[i], st = starAt(h.gua, i);
+    if (L.early) s += radialText(b, 58, EARLY[i], 30, 'c-ink', font + ' font-weight="700"');
+    s += trigramLines(b, (L.early ? R.early : R.hub) + 20, BITS[i], 40);
+    s += radialText(b, 140, t.zh, 52, i === h.gua ? 'c-red' : 'c-ink', font + ' font-weight="900"');
+    if (FS && L.stars) {
+      // mountain star | period star | water star, coloured 1-4 red, 5 brown, 6-9 green
+      const m = FS.mtn.p[i], w = FS.wat.p[i], pd = FS.base.p[i];
+      s += `<g transform="rotate(${b}) translate(0 -196)" font-family="IBM Plex Mono, monospace" font-weight="700" text-anchor="middle" dominant-baseline="central">
+        <text x="-34" font-size="34" class="c-${nCls(m)}">${m}</text><text x="0" y="4" font-size="22" class="c-${nCls(pd)}" opacity="0.8">${pd}</text><text x="34" font-size="34" class="c-${nCls(w)}">${w}</text></g>`;
+      s += radialText(b, 229, `${t.dirZh} ${t.dir}`, 17, 'c-ink', font + ' font-weight="700"');
+    } else if (NQ && L.stars) {
+      // fixed Lo Shu number with its 正 / 零 role for the chosen period
+      const n = LOSHU[i], z = NQ.zheng[i], main = i === NQ.mainZ || i === NQ.mainL;
+      s += `<g transform="rotate(${b}) translate(0 -194)" text-anchor="middle" dominant-baseline="central" font-weight="900">
+        <text x="-20" font-size="${main ? 40 : 34}" font-family="IBM Plex Mono, monospace" class="${z ? 'c-nz' : 'c-n1'}">${n}</text><text x="22" font-size="${main ? 32 : 26}" ${font} class="${z ? 'c-nz' : 'c-n1'}">${z ? '正' : '零'}</text></g>`;
+      s += radialText(b, 229, `${t.dirZh} ${t.dir}`, 17, 'c-ink', font + ' font-weight="700"');
+    } else {
+      s += radialText(b, 222, `${t.dirZh} ${t.dir}`, 21, 'c-ink', font + ' font-weight="700"');
+      if (L.stars) s += radialText(b, 190, st.zh, 26, st.good ? 'c-good' : 'c-bad', font + ' font-weight="900"');
+    }
+  }
+  for (let i = 0; i < 24; i++) {
+    const b = i * 15;
+    if (L.organs) s += radialText(b, 272, ORGAN[i], ORGAN[i].length > 2 ? 19 : 23, 'c-ink', font + ' font-weight="500"');
+    if (L.mountains) s += radialText(b, 346, MTN[i], 44, MTN_RED.has(MTN[i]) ? 'c-red' : 'c-ink', font + ' font-weight="900"');
+  }
+  if (L.degrees) {
+    for (let d = 0; d < 360; d++) {
+      const len = d % 10 === 0 ? 30 : d % 5 === 0 ? 20 : 11;
+      const [x0, y0] = P(d, R.deg), [x1, y1] = P(d, R.deg - len);
+      s += `<line x1="${x0.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y1.toFixed(1)}" class="c-stroke" stroke-width="${d % 10 === 0 ? 1.8 : 1}"/>`;
+      if (d % 10 === 0) s += radialText(d, R.mtn + 26, d === 0 ? '0/360' : d, 17, 'c-faint', 'font-family="IBM Plex Mono, monospace"');
+    }
+  }
+  s += `<g transform="rotate(${h.facing})"><path d="M0 ${-outer + 6} l-14 34 h28z" class="c-red"/></g>`;
+  s += `<g data-rot="1" style="cursor:grab"><line x1="0" y1="${outer}" x2="0" y2="${outer + 84}" class="c-sector" stroke-width="4"/>
+    <circle cy="${outer + 116}" r="32" class="c-red"/><text transform="translate(0 ${outer + 116}) rotate(180)" font-size="36" font-weight="900" fill="#fff" text-anchor="middle" dominant-baseline="central" font-family="Noto Serif TC, serif">南</text>
+    <circle cy="${outer + 116}" r="50" fill="transparent"/></g>`;
+  s += `<circle r="5" class="c-red"/>`;
+  return s;
+}
+
+// ---------- Stage ----------
+const svg = $('#stage');
+let compassKey = '';
+function setupStage() {
+  const { w, h } = S.img;
+  Z.z = 1; Z.cx = null;
+  svg.innerHTML = `<g id="imgG"><image id="planImg" href="${S.img.src}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none"/></g>
+    <g id="compassG"></g><g id="frameG"></g><g id="overlayG"><g id="raysG"></g><g id="markersG"></g></g>`;
+  $('#sampleTag').hidden = !S.img.sample;
+  compassKey = '';
+  fitStage();
+}
+let VB = { x: 0, y: 0, w: 1, h: 1 }, BASE = VB;
+const Z = { z: 1, cx: null, cy: null }; // zoom level and view centre in world units
+function setViewBox() {
+  // the view is the bounding box of the plan turned by imgRot about its middle
+  const { w, h } = S.img, a = S.imgRot * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+  const pts = [[0, 0], [w, 0], [w, h], [0, h]].map(([x, y]) => [w / 2 + (x - w / 2) * c - (y - h / 2) * s, h / 2 + (x - w / 2) * s + (y - h / 2) * c]);
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  BASE = { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
+  if (Z.cx == null || Z.z <= 1) { Z.cx = BASE.x + BASE.w / 2; Z.cy = BASE.y + BASE.h / 2; }
+  const vw = BASE.w / Z.z, vh = BASE.h / Z.z;
+  Z.cx = Math.max(BASE.x + vw / 2, Math.min(BASE.x + BASE.w - vw / 2, Z.cx));
+  Z.cy = Math.max(BASE.y + vh / 2, Math.min(BASE.y + BASE.h - vh / 2, Z.cy));
+  VB = { x: Z.cx - vw / 2, y: Z.cy - vh / 2, w: vw, h: vh };
+  svg.setAttribute('viewBox', `${VB.x} ${VB.y} ${VB.w} ${VB.h}`);
+  const zo = $('#zoomOut'); if (zo) zo.textContent = Math.round(Z.z * 100) + '%';
+  ['#imgG', '#overlayG'].forEach(id => { const g = $(id); if (g) g.setAttribute('transform', `rotate(${S.imgRot} ${w / 2} ${h / 2})`); });
+}
+function fitStage() {
+  setViewBox();
+  const wrap = $('#stageWrap');
+  const availW = wrap.clientWidth;
+  const top = wrap.getBoundingClientRect().top + window.scrollY;
+  const availH = Math.max(320, window.innerHeight - (window.innerWidth > 980 ? Math.min(top, 330) + 50 : 160));
+  const { w, h } = BASE;
+  const sc = Math.min(availW / w, availH / h);
+  svg.style.width = Math.floor(w * sc) + 'px';
+  svg.style.height = Math.floor(h * sc) + 'px';
+  drawDynamic();
+}
+const unit = () => VB.w / (svg.getBoundingClientRect().width || VB.w);
+let compassBody = '';
+function anchorPt(c) {
+  if (c.anchor === 'outline') return { x: S.frame.cx, y: S.frame.cy };
+  if (c.anchor === 'door') return toWorld(S.door);
+  const t = c.anchor === 'active' ? activeTarget() : (targetList().find(t => t.key === c.anchor) || activeTarget());
+  return toWorld(t.pt);
+}
+function drawCompass() {
+  const h = house();
+  const key = JSON.stringify([S.layers, h.gua, Math.round(h.facing * 10), S.school, S.period, S.school === 'naqi' ? naqi(S.period).zheng : 0]);
+  if (key !== compassKey) { compassBody = buildCompass(h); compassKey = key; }
+  const base = Math.max(S.img.w, S.img.h) / 2, cls = S.skin === 'dark' ? 'cmp-dark' : 'cmp-light';
+  $('#compassG').innerHTML = S.compasses.filter(c => !c.hidden).map(c => {
+    const p = anchorPt(c), rad = base * c.size / 100;
+    const letters = [[0, '北', 'N'], [90, '東', 'E'], [180, '南', 'S'], [270, '西', 'W']].map(([b, z, l]) =>
+      `<g transform="rotate(${b}) translate(0 ${-(outerR() + 40)}) rotate(${-(b + S.north)})"><text font-size="44" font-weight="900" text-anchor="middle" dominant-baseline="central" class="${b === 180 ? 'c-red' : 'c-ink'}" stroke="var(--c-bg)" stroke-width="8" paint-order="stroke" font-family="Noto Serif TC, IBM Plex Sans, serif">${z} ${l}</text></g>`).join('');
+    return `<g data-cid="${c.id}" class="${cls}" style="opacity:${c.opacity / 100}" transform="translate(${p.x} ${p.y}) rotate(${S.north}) scale(${rad / 500})">${compassBody}${letters}</g>`;
+  }).join('');
+}
+function markerSVG(kind, id, pt, label, glyph, opts = {}) {
+  const u = unit(), r = 11 * u, fs = 11 * u;
+  const sel = S.selected === id, active = opts.active;
+  let s = `<g data-mid="${esc(id)}" transform="translate(${pt.x} ${pt.y})" style="cursor:${S.tool === 'move' ? 'move' : 'crosshair'}">`;
+  if (opts.rot != null) {
+    const [dx, dy] = [Math.sin(opts.rot * Math.PI / 180), -Math.cos(opts.rot * Math.PI / 180)];
+    const L = 34 * u;
+    s += `<line x1="0" y1="0" x2="${dx * L}" y2="${dy * L}" stroke="${opts.fill}" stroke-width="${2.5 * u}"/>
+      <circle data-orient="${esc(id)}" cx="${dx * L}" cy="${dy * L}" r="${6 * u}" fill="#fff" stroke="${opts.fill}" stroke-width="${2.5 * u}" style="cursor:grab"/>
+      <circle data-orient="${esc(id)}" cx="${dx * L}" cy="${dy * L}" r="${13 * u}" fill="transparent" style="cursor:grab"/>`;
+  }
+  s += `<g transform="rotate(${-S.imgRot})">`;
+  if (active) s += `<circle r="${r * 1.75}" fill="none" stroke="${opts.fill}" stroke-width="${2.5 * u}" stroke-dasharray="${4 * u} ${3 * u}"/>`;
+  if (sel) s += `<circle r="${r * 1.45}" fill="none" stroke="#111" stroke-width="${2 * u}"/>`;
+  const shape = kind === 'window' ? `<rect x="${-r}" y="${-r}" width="${2 * r}" height="${2 * r}" rx="${3 * u}"` : kind === 'door' ? `<rect x="${-r * 1.15}" y="${-r}" width="${2.3 * r}" height="${2 * r}" rx="${2 * u}"` : `<circle r="${r}"`;
+  s += `${shape} fill="${opts.fill}" stroke="#fff" stroke-width="${2 * u}"/>`;
+  s += `<text font-size="${kind === 'window' ? fs : fs * 1.15}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="700" font-family="${kind === 'window' ? 'IBM Plex Mono, monospace' : 'Noto Serif TC, serif'}">${esc(glyph)}</text>`;
+  const flip = pt.x > S.img.w - 110 * u;
+  s += `<text x="${flip ? -r * 1.5 : r * 1.5}" y="${-r * 0.9}" text-anchor="${flip ? 'end' : 'start'}" font-size="${fs}" fill="#111" stroke="#fff" stroke-width="${3 * u}" paint-order="stroke" font-family="IBM Plex Sans, Noto Sans TC, sans-serif" font-weight="600">${esc(label)}</text>`;
+  return s + '</g></g>';
+}
+const COL = { center: '#1b2320', door: '#b8321f', window: '#3b6fa8', room: '#6a5a8e', sofa: '#94721f', bed: '#2c6b58' };
+function drawMarkers() {
+  const at = activeTarget();
+  let s = '';
+  S.rooms.forEach(r => s += markerSVG('room', 'room:' + r.id, r, r.name || tr('房間', 'Room'), '房', { fill: COL.room, active: at.key === 'room:' + r.id }));
+  S.windows.forEach((w, i) => s += markerSVG('window', 'win:' + w.id, w, w.name ? `W${i + 1} ${w.name}` : `W${i + 1}`, 'W' + (i + 1), { fill: COL.window }));
+  s += markerSVG('door', 'door', S.door, tr('大門', 'Front door'), '門', { fill: COL.door, active: at.key === 'door' });
+  s += markerSVG('sofa', 'sofa', S.sofa, tr('沙發', 'Sofa'), '沙', { fill: COL.sofa, rot: S.sofa.rot, active: at.key === 'sofa' });
+  s += markerSVG('bed', 'bed', S.bed, tr('床', 'Bed'), '床', { fill: COL.bed, rot: S.bed.rot, active: at.key === 'bed' });
+  s += markerSVG('center', 'center', S.center, tr('屋中心', 'House centre'), '中', { fill: COL.center, active: at.key === 'center' });
+  // knob on the plan's top-right corner turns the plan image
+  const u = unit();
+  s += `<g data-irot="1" transform="translate(${S.img.w - 22 * u} ${22 * u}) rotate(${-S.imgRot})" style="cursor:grab"><circle r="${12 * u}" fill="#3b6fa8" stroke="#fff" stroke-width="${2 * u}"/><text font-size="${15 * u}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="700">⟳</text><circle r="${20 * u}" fill="transparent"/></g>`;
+  $('#markersG').innerHTML = s;
+}
+function drawRays() {
+  const g = $('#raysG');
+  if (!S.layers.rays) { g.innerHTML = ''; return; }
+  const h = house(), t = activeTarget().pt, u = unit();
+  let s = '';
+  const ray = (p, col) => s += `<line x1="${t.x}" y1="${t.y}" x2="${p.x}" y2="${p.y}" stroke="${col}" stroke-width="${2.2 * u}" stroke-dasharray="${7 * u} ${5 * u}" stroke-linecap="round" opacity="0.9"/>`;
+  const FS = S.school === 'flying' ? flyChart(S.period, h.sitting, h.facing) : null, NC = { n1: '#c4271c', n5: '#8a5a2b', n6: '#2c8a6a' };
+  S.windows.forEach(w => {
+    const sec = sec8(bearing(t, w));
+    if (FS) { ray(w, NC[nCls(FS.wat.p[sec])]); return; }
+    if (S.school === 'naqi') { ray(w, naqi(S.period).zheng[sec] ? '#2f78c4' : '#c4271c'); return; }
+    const st = starAt(h.gua, sec); ray(w, st.good ? '#2c8a6a' : '#d0402f');
+  });
+  if (t !== S.door) ray(S.door, '#94721f');
+  g.innerHTML = s;
+}
+function drawFrame() {
+  const g = $('#frameG');
+  if (!S.layers.frame) { g.innerHTML = ''; return; }
+  const f = S.frame, u = unit(), hw = f.w / 2, hh = f.h / 2, red = '#c4271c';
+  const P2 = (x, y) => { const q = fromLocal(f, x, y); return `${q.x.toFixed(1)},${q.y.toFixed(1)}`; };
+  const line = (x1, y1, x2, y2, extra) => { const a = fromLocal(f, x1, y1), b = fromLocal(f, x2, y2); return `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" ${extra}/>`; };
+  const ext = 22 * u;
+  let s = `<polygon points="${P2(-hw, -hh)} ${P2(hw, -hh)} ${P2(hw, hh)} ${P2(-hw, hh)}" fill="none" stroke="${red}" stroke-width="${2.6 * u}"/>`;
+  const dash = `stroke="${red}" stroke-width="${1.6 * u}" stroke-dasharray="${9 * u} ${5 * u}"`;
+  s += line(-hw - ext, 0, hw + ext, 0, dash) + line(0, -hh - ext, 0, hh + ext, dash);
+  // fixed side labels in the Chinese map convention: South on top, East on the left
+  const sides = [['t', 0, -hh, '南 S'], ['r', hw, 0, '西 W'], ['b', 0, hh, '北 N'], ['l', -hw, 0, '東 E']];
+  sides.forEach(([k, x, y, lab]) => {
+    const n = { t: [0, -1], r: [1, 0], b: [0, 1], l: [-1, 0] }[k];
+    const lp = fromLocal(f, x + n[0] * 30 * u, y + n[1] * 30 * u), hp = fromLocal(f, x, y);
+    s += `<g transform="translate(${lp.x} ${lp.y})"><text font-size="${11 * u}" text-anchor="middle" dominant-baseline="central" fill="${red}" stroke="#fff" stroke-width="${3.5 * u}" paint-order="stroke" font-weight="700" font-family="Noto Serif TC, IBM Plex Sans, serif">${lab}</text></g>`;
+    s += `<g data-edge="${k}" transform="translate(${hp.x} ${hp.y}) rotate(${f.rot})" style="cursor:${k === 't' || k === 'b' ? 'ns-resize' : 'ew-resize'}"><rect x="${-6 * u}" y="${-6 * u}" width="${12 * u}" height="${12 * u}" fill="#fff" stroke="${red}" stroke-width="${2.2 * u}"/><rect x="${-14 * u}" y="${-14 * u}" width="${28 * u}" height="${28 * u}" fill="transparent"/></g>`;
+  });
+  const kp = fromLocal(f, hw + 26 * u, -hh - 26 * u);
+  s += `<g data-frot="1" transform="translate(${kp.x} ${kp.y})" style="cursor:grab"><circle r="${12 * u}" fill="${red}" stroke="#fff" stroke-width="${2 * u}"/><text font-size="${15 * u}" fill="#fff" text-anchor="middle" dominant-baseline="central" font-weight="700">⟳</text><circle r="${20 * u}" fill="transparent"/></g>`;
+  if (!S.centerLock) s += `<circle cx="${f.cx}" cy="${f.cy}" r="${4 * u}" fill="${red}"/>`;
+  g.innerHTML = s;
+}
+let rafPending = false;
+function drawDynamic() {
+  if (rafPending) return; rafPending = true;
+  requestAnimationFrame(() => { rafPending = false; if (S.centerLock) { const c = toImage({ x: S.frame.cx, y: S.frame.cy }); S.center.x = c.x; S.center.y = c.y; } drawCompass(); drawFrame(); drawRays(); drawMarkers(); renderReading(); renderTargets(); syncControls(); });
+}
+
+// ---------- Interaction ----------
+function svgPt(e, world) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform((world ? svg : $('#overlayG')).getScreenCTM().inverse()); }
+const imgMid = () => ({ x: S.img.w / 2, y: S.img.h / 2 });
+function getMarker(id) {
+  if (id === 'door' || id === 'center' || id === 'sofa' || id === 'bed') return S[id];
+  if (id.startsWith('room:')) return S.rooms.find(r => r.id === id.slice(5));
+  if (id.startsWith('win:')) return S.windows.find(w => w.id === id.slice(4));
+}
+const clampPt = p => ({ x: Math.max(0, Math.min(S.img.w, p.x)), y: Math.max(0, Math.min(S.img.h, p.y)) });
+let drag = null;
+svg.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  const p = svgPt(e);
+  const rotEl = e.target.closest('[data-rot]'), orEl = e.target.closest('[data-orient]'), mEl = e.target.closest('[data-mid]');
+  const edgeEl = e.target.closest('[data-edge]'), frotEl = e.target.closest('[data-frot]'), irotEl = e.target.closest('[data-irot]');
+  const pw = svgPt(e, true);
+  if (rotEl) { drag = { kind: 'rot', cid: rotEl.closest('[data-cid]').getAttribute('data-cid') }; }
+  else if (irotEl) { drag = { kind: 'irot', offset: screenAng(imgMid(), pw) - S.imgRot }; }
+  else if (frotEl) { drag = { kind: 'frot', offset: screenAng({ x: S.frame.cx, y: S.frame.cy }, pw) - S.frame.rot }; }
+  else if (edgeEl) { drag = { kind: 'edge', edge: edgeEl.getAttribute('data-edge') }; }
+  else if (orEl) { drag = { kind: 'orient', id: orEl.getAttribute('data-orient') }; }
+  else if (mEl && S.tool === 'move') {
+    const id = mEl.getAttribute('data-mid'), m = getMarker(id);
+    drag = { kind: 'move', id, dx: m.x - p.x, dy: m.y - p.y, sx: e.clientX, sy: e.clientY, moved: false };
+    S.selected = id; updateDelBtn();
+    // pressing any reading spot (centre, door, sofa, bed, room) makes it the active one
+    if (targetList().some(t => t.key === id)) S.target = id;
+  } else if (S.tool === 'window') {
+    const q = clampPt(p); S.windows.push({ id: newId('w'), name: '', x: q.x, y: q.y }); renderLists(); save(); drawDynamic(); return;
+  } else if (S.tool === 'room') {
+    const q = clampPt(p); const r = { id: newId('r'), name: tr('房間 ', 'Room ') + (S.rooms.length + 1), type: 'other', x: q.x, y: q.y };
+    S.rooms.push(r); S.target = 'room:' + r.id; renderLists(); save(); drawDynamic(); return;
+  } else { S.selected = null; updateDelBtn(); drag = { kind: 'pan', sx: e.clientX, sy: e.clientY, cx: Z.cx, cy: Z.cy, u: unit() }; }
+  svg.setPointerCapture(e.pointerId);
+  e.preventDefault();
+  drawDynamic();
+});
+svg.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const p = svgPt(e);
+  if (drag.kind === 'pan') {
+    Z.cx = drag.cx - (e.clientX - drag.sx) * drag.u; Z.cy = drag.cy - (e.clientY - drag.sy) * drag.u;
+    setViewBox(); return;
+  }
+  const pw = svgPt(e, true);
+  if (drag.kind === 'rot') {
+    const c = S.compasses.find(c => c.id === drag.cid) || S.compasses[0];
+    S.north = norm(Math.round(screenAng(anchorPt(c), pw) - 180)); // the knob sits on the south point
+  } else if (drag.kind === 'irot') {
+    S.imgRot = norm(Math.round(screenAng(imgMid(), pw) - drag.offset)); fitStage(); return;
+  } else if (drag.kind === 'frot') {
+    S.frame.rot = norm(Math.round(screenAng({ x: S.frame.cx, y: S.frame.cy }, pw) - drag.offset));
+  } else if (drag.kind === 'edge') {
+    const f = S.frame, l = toLocal(f, pw);
+    let L = -f.w / 2, Rr = f.w / 2, T = -f.h / 2, B = f.h / 2;
+    if (drag.edge === 'r') Rr = Math.max(L + 20, l.x); if (drag.edge === 'l') L = Math.min(Rr - 20, l.x);
+    if (drag.edge === 't') T = Math.min(B - 20, l.y); if (drag.edge === 'b') B = Math.max(T + 20, l.y);
+    const c = fromLocal(f, (L + Rr) / 2, (T + B) / 2);
+    S.frame = { ...f, cx: c.x, cy: c.y, w: Rr - L, h: B - T };
+  } else if (drag.kind === 'orient') {
+    const m = getMarker(drag.id); m.rot = Math.round(screenAng(m, p));
+  } else if (drag.kind === 'move') {
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) <= 3) return; // ignore hand jitter on a click
+    const m = getMarker(drag.id); const q = clampPt({ x: p.x + drag.dx, y: p.y + drag.dy }); m.x = q.x; m.y = q.y; drag.moved = true;
+    if (drag.id === 'center' && S.centerLock) { const c = toWorld(q); S.frame.cx = c.x; S.frame.cy = c.y; }
+  }
+  drawDynamic();
+});
+const endDrag = () => {
+  if (!drag) return;
+  if (drag.kind === 'move' && !drag.moved) {
+    const id = drag.id;
+    if (targetList().some(t => t.key === id)) S.target = id;
+  }
+  drag = null; save(); drawDynamic();
+};
+svg.addEventListener('pointerup', endDrag);
+function zoomBy(f, pt) {
+  const nz = Math.max(1, Math.min(10, Z.z * f));
+  pt = pt || { x: Z.cx, y: Z.cy };
+  Z.cx = pt.x - (pt.x - Z.cx) * (Z.z / nz); Z.cy = pt.y - (pt.y - Z.cy) * (Z.z / nz); Z.z = nz;
+  setViewBox(); drawDynamic();
+}
+svg.addEventListener('wheel', e => { e.preventDefault(); zoomBy(Math.exp(-e.deltaY * 0.0015), svgPt(e, true)); }, { passive: false });
+$('#zoomIn').addEventListener('click', () => zoomBy(1.4));
+$('#zoomMinus').addEventListener('click', () => zoomBy(1 / 1.4));
+$('#zoomFit').addEventListener('click', () => { Z.z = 1; setViewBox(); drawDynamic(); });
+svg.addEventListener('pointercancel', endDrag);
+
+function setTool(t) {
+  S.tool = t;
+  document.querySelectorAll('[data-tool]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tool === t)));
+  svg.classList.toggle('placing', t !== 'move');
+  drawDynamic();
+}
+document.querySelectorAll('[data-tool]').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+function updateDelBtn() { const id = S.selected; $('#delBtn').disabled = !(id && (id.startsWith('room:') || id.startsWith('win:'))); }
+function deleteMarker(id) {
+  if (id.startsWith('win:')) S.windows = S.windows.filter(w => w.id !== id.slice(4));
+  if (id.startsWith('room:')) { S.rooms = S.rooms.filter(r => r.id !== id.slice(5)); if (S.target === id) S.target = 'center'; }
+  if (S.selected === id) S.selected = null;
+  updateDelBtn(); renderLists(); save(); drawDynamic();
+}
+$('#delBtn').addEventListener('click', () => S.selected && deleteMarker(S.selected));
+document.addEventListener('keydown', e => {
+  if ((e.key === 'Delete' || e.key === 'Backspace') && S.selected && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); deleteMarker(S.selected); }
+  if (e.key === 'Escape') setTool('move');
+});
+
+// Language
+document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click', () => {
+  const to = b.dataset.lang; if (to === S.lang) return;
+  // names still matching the sample's defaults follow the language switch
+  const from = sampleNames(S.lang), n = sampleNames(to);
+  S.rooms.forEach(r => { const i = from.rooms.indexOf(r.name); if (i >= 0) r.name = n.rooms[i]; });
+  S.windows.forEach(w => { const i = from.wins.indexOf(w.name); if (i >= 0) w.name = n.wins[i]; });
+  S.lang = to; save(); refreshLanguage();
+}));
+function refreshLanguage() { renderPeriodOptions(); applyStatic(); renderLayerChecks(); renderLists(); renderGuide(); drawDynamic(); }
+
+// Upload
+function loadFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const w = im.naturalWidth || 1000, h = im.naturalHeight || 800;
+      const old = S.img, sx = w / old.w, sy = h / old.h;
+      [S.center, S.door, S.sofa, S.bed, ...S.rooms, ...S.windows].forEach(p => { p.x *= sx; p.y *= sy; });
+      if (old.sample) {
+        S.windows = []; S.rooms = [];
+        S.center = { x: w / 2, y: h / 2 }; S.door = { x: w / 2, y: h * 0.92 };
+        S.sofa = { x: w * 0.3, y: h * 0.62, rot: 90 }; S.bed = { x: w * 0.72, y: h * 0.35, rot: 0 };
+        S.target = 'center'; S.north = 180;
+      }
+      S.img = { src: fr.result, w, h, sample: false };
+      S.frame = defaultFrame(S.img); S.imgRot = 0;
+      renderLists(); setupStage(); save();
+    };
+    im.src = fr.result;
+  };
+  fr.readAsDataURL(file);
+}
+$('#uploadBtn').addEventListener('click', () => $('#fileIn').click());
+$('#fileIn').addEventListener('change', e => { loadFile(e.target.files[0]); e.target.value = ''; });
+const wrap = $('#stageWrap');
+wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add('drop'); });
+wrap.addEventListener('dragleave', () => wrap.classList.remove('drop'));
+wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('drop'); loadFile(e.dataTransfer.files[0]); });
+$('#sampleBtn').addEventListener('click', () => { const tab = S.tab; S = sampleState(S.lang); S.tab = tab; renderLists(); setupStage(); save(); });
+let resetArmed = false;
+$('#resetBtn').addEventListener('click', () => {
+  if (!resetArmed) { resetArmed = true; $('#resetNote').hidden = false; setTimeout(() => { resetArmed = false; $('#resetNote').hidden = true; }, 3000); return; }
+  resetArmed = false; $('#resetNote').hidden = true;
+  const { w, h } = S.img;
+  S.windows = []; S.rooms = []; S.target = 'center';
+  S.center = { x: w / 2, y: h / 2 }; S.door = { x: w / 2, y: h * 0.92 };
+  S.sofa = { x: w * 0.3, y: h * 0.62, rot: 90 }; S.bed = { x: w * 0.72, y: h * 0.35, rot: 0 };
+  S.frame = defaultFrame(S.img);
+  renderLists(); save(); drawDynamic();
+});
+
+// Tabs
+document.querySelectorAll('[role="tab"]').forEach(b => b.addEventListener('click', () => { S.tab = b.dataset.pane; showTab(); save(); }));
+function showTab() {
+  document.querySelectorAll('[role="tab"]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.pane === S.tab)));
+  ['reading', 'setup', 'guide'].forEach(p => $('#pane-' + p).hidden = p !== S.tab);
+}
+
+// Setup controls
+const bindRange = (id, fn) => $(id).addEventListener('input', e => { fn(+e.target.value); save(); drawDynamic(); });
+bindRange('#southIn', v => S.north = norm(v + 180));
+bindRange('#frameRotIn', v => S.frame.rot = v);
+$('#imgRotIn').addEventListener('input', e => { S.imgRot = +e.target.value; save(); fitStage(); });
+document.querySelectorAll('[data-rstep]').forEach(b => b.addEventListener('click', () => {
+  const [k, d] = b.dataset.rstep.split(':');
+  if (k === 'img') { S.imgRot = norm(S.imgRot + +d); save(); fitStage(); return; }
+  if (k === 'frame') S.frame.rot = norm(S.frame.rot + +d); else S.north = norm(S.north + +d);
+  save(); drawDynamic();
+}));
+document.querySelectorAll('[data-school]').forEach(b => b.addEventListener('click', () => { S.school = b.dataset.school; save(); drawDynamic(); }));
+$('#periodIn').addEventListener('change', e => { S.period = +e.target.value; save(); drawDynamic(); });
+function renderPeriodOptions() {
+  $('#periodIn').innerHTML = PERIODS.map(([n, y]) => `<option value="${n}" ${S.period === n ? 'selected' : ''}>${tr(`${'一二三四五六七八九'[n - 1]}運 ${y}–${y + 19}`, `Period ${n}: ${y}–${y + 19}`)}</option>`).join('');
+}
+document.querySelectorAll('[data-south]').forEach(b => b.addEventListener('click', () => { S.north = norm(+b.dataset.south + 180); save(); drawDynamic(); }));
+function renderCompassList() {
+  const opts = c => [['active', ui('anchorActive')], ['outline', ui('anchorOutline')], ...targetList().map(t => [t.key, t.label])]
+    .map(([k, l]) => `<option value="${esc(k)}" ${c.anchor === k ? 'selected' : ''}>${esc(l)}</option>`).join('');
+  $('#compassList').innerHTML = S.compasses.map((c, i) => `<div class="cmp-row" data-crow="${c.id}">
+      <label class="cmp-show"><input type="checkbox" data-cshow="${c.id}" ${c.hidden ? '' : 'checked'} aria-label="${tr('顯示羅盤', 'Show compass')} ${i + 1}"><span class="zh">${tr('羅盤 ', 'Compass ')}${i + 1}</span></label>
+      <select data-canchor="${c.id}" aria-label="${tr('羅盤位置', 'Compass position')}">${opts(c)}</select>
+      <label>${ui('cmpSize')}<input type="range" min="10" max="150" step="1" data-csize="${c.id}"><output class="num"></output></label>
+      <label>${ui('cmpTrans')}<input type="range" min="5" max="90" step="1" data-ctrans="${c.id}"><output class="num"></output></label>
+      <button class="icon-btn" type="button" data-cdel="${c.id}" aria-label="${tr('移除羅盤', 'Remove compass')}" ${S.compasses.length < 2 ? 'disabled' : ''}>✕</button></div>`).join('')
+    + `<div class="row"><button type="button" class="btn" id="addCompassBtn">${ui('addCompass')}</button><button type="button" class="btn" id="resetViewBtn">${ui(resetViewArmed ? 'resetViewSure' : 'resetView')}</button></div>`;
+  syncCompassRows();
+}
+function syncCompassRows() {
+  S.compasses.forEach(c => {
+    const sz = $(`[data-csize="${c.id}"]`), tp = $(`[data-ctrans="${c.id}"]`); if (!sz) return;
+    if (document.activeElement !== sz) sz.value = c.size; sz.nextElementSibling.textContent = c.size + '%';
+    if (document.activeElement !== tp) tp.value = 100 - c.opacity; tp.nextElementSibling.textContent = (100 - c.opacity) + '%';
+  });
+}
+$('#compassList').addEventListener('input', e => {
+  const t = e.target, id = t.dataset.csize || t.dataset.ctrans; if (!id) return;
+  const c = S.compasses.find(c => c.id === id);
+  if (t.dataset.csize) c.size = +t.value; else c.opacity = 100 - +t.value;
+  save(); drawDynamic();
+});
+$('#compassList').addEventListener('change', e => { const sid = e.target.dataset.cshow; if (sid) { S.compasses.find(c => c.id === sid).hidden = !e.target.checked; save(); drawDynamic(); return; } const id = e.target.dataset.canchor; if (id) { S.compasses.find(c => c.id === id).anchor = e.target.value; save(); drawDynamic(); } });
+let resetViewArmed = false;
+function resetLayout() {
+  // back to the starting orientation, sizes and compass; an uploaded plan keeps its marks
+  const keep = { lang: S.lang, tab: S.tab };
+  if (S.img.sample) S = Object.assign(sampleState(S.lang), keep);
+  else {
+    const d = sampleState(S.lang);
+    Object.assign(S, { imgRot: 0, north: 180, frame: defaultFrame(S.img), compasses: d.compasses, school: d.school, period: d.period, layers: d.layers, centerLock: d.centerLock, doorManual: false });
+  }
+  renderLists(); renderCompassList(); setupStage(); syncControls(); save();
+}
+$('#compassList').addEventListener('click', e => {
+  if (e.target.id === 'resetViewBtn') {
+    if (!resetViewArmed) { resetViewArmed = true; renderCompassList(); setTimeout(() => { if (resetViewArmed) { resetViewArmed = false; renderCompassList(); } }, 3000); return; }
+    resetViewArmed = false; resetLayout(); return;
+  }
+  if (e.target.id === 'addCompassBtn') {
+    const used = new Set(S.compasses.map(c => c.anchor));
+    const next = ['bed', 'sofa', 'outline', 'center'].find(k => !used.has(k)) || 'outline';
+    S.compasses.push({ id: newId('c'), anchor: next, size: 35, opacity: 55 }); renderCompassList(); save(); drawDynamic();
+  }
+  const d = e.target.closest('[data-cdel]'); if (d && S.compasses.length > 1) { S.compasses = S.compasses.filter(c => c.id !== d.dataset.cdel); renderCompassList(); save(); drawDynamic(); }
+});
+bindRange('#sofaRot', v => S.sofa.rot = norm(v + northImg()));
+bindRange('#bedRot', v => S.bed.rot = norm(v + northImg()));
+$('#centerLock').addEventListener('change', e => { S.centerLock = e.target.checked; save(); drawDynamic(); });
+$('#fitFrameBtn').addEventListener('click', () => { S.frame = defaultFrame(S.img); save(); drawDynamic(); });
+document.querySelectorAll('[data-skin]').forEach(b => b.addEventListener('click', () => { S.skin = b.dataset.skin; save(); drawDynamic(); }));
+document.querySelectorAll('[data-gender]').forEach(b => b.addEventListener('click', () => { S.kua.gender = b.dataset.gender; save(); drawDynamic(); }));
+$('#kuaYear').addEventListener('input', e => { S.kua.year = e.target.value; save(); drawDynamic(); });
+$('#doorManual').addEventListener('change', e => { S.doorManual = e.target.checked; if (S.doorManual) S.doorDeg = +doorFacingAuto().toFixed(1); save(); drawDynamic(); });
+$('#doorDeg').addEventListener('input', e => { S.doorDeg = +e.target.value; save(); drawDynamic(); });
+const LAYERS = [['frame', ['房屋外框', 'House outline']], ['degrees', ['度數環', 'Degree ring']], ['mountains', ['二十四山', '24 Mountains']], ['organs', ['臟腑經絡', 'Organs and meridians']], ['early', ['先天八卦環', 'Early Heaven ring']], ['stars', ['星盤（飛星／八宅）', 'Star ring (Flying / Mansions)']], ['rays', ['窗戶連線', 'Lines to windows']]];
+function renderLayerChecks() {
+  $('#layerChecks').innerHTML = LAYERS.map(([k, l]) => `<label><input type="checkbox" id="layer-${k}" data-layer="${k}" ${S.layers[k] ? 'checked' : ''}> ${pick(l)}</label>`).join('');
+}
+$('#layerChecks').addEventListener('change', e => { const c = e.target.closest('[data-layer]'); if (c) { S.layers[c.dataset.layer] = c.checked; save(); drawDynamic(); } });
+function syncControls() {
+  const setIf = (sel, v) => { const x = $(sel); if (document.activeElement !== x) x.value = v; };
+  const south = Math.round(norm(S.north + 180));
+  document.querySelectorAll('[data-school]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.school === S.school)));
+  $('#periodWrap').hidden = S.school === 'mansion';
+  if (+$('#periodIn').value !== S.period) $('#periodIn').value = S.period;
+  setIf('#southIn', south); $('#southOut').textContent = south + '°';
+  setIf('#imgRotIn', S.imgRot); $('#imgRotOut').textContent = S.imgRot + '°';
+  setIf('#frameRotIn', norm(S.frame.rot)); $('#frameRotOut').textContent = Math.round(norm(S.frame.rot)) + '°';
+  syncCompassRows();
+  const sb = Math.round(toBearing(S.sofa.rot)), bb = Math.round(toBearing(S.bed.rot));
+  setIf('#sofaRot', sb); $('#sofaOut').textContent = sb + '°';
+  setIf('#bedRot', bb); $('#bedOut').textContent = bb + '°';
+  document.querySelectorAll('[data-skin]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.skin === S.skin)));
+  document.querySelectorAll('[data-gender]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.gender === S.kua.gender)));
+  document.querySelectorAll('[data-south]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.south === south)));
+  setIf('#kuaYear', S.kua.year);
+  $('#centerLock').checked = !!S.centerLock;
+  $('#doorManual').checked = S.doorManual;
+  const dd = $('#doorDeg'); dd.disabled = !S.doorManual; if (document.activeElement !== dd) dd.value = S.doorManual ? S.doorDeg : doorFacingAuto().toFixed(1);
+  LAYERS.forEach(([k]) => { const c = $('#layer-' + k); if (c) c.checked = !!S.layers[k]; });
+  const k = kuaOf(S.kua.year, S.kua.gender);
+  $('#kuaOut').innerHTML = k ? tr(`命卦 ${k.num}：<span class="zh">${TRI[k.idx].zh}</span>，${EAST_GROUP.has(k.idx) ? '東四命' : '西四命'}`,
+    `Gua ${k.num}: <span class="zh">${TRI[k.idx].zh}</span> ${TRI[k.idx].py}, ${EAST_GROUP.has(k.idx) ? 'East' : 'West'} group`) : '';
+}
+function renderLists() {
+  renderCompassList();
+  $('#roomList').innerHTML = S.rooms.length ? S.rooms.map(r => `<div class="list-item">
+      <span class="badge zh">房</span>
+      <input type="text" value="${esc(r.name)}" data-rname="${r.id}" aria-label="${tr('房間名稱', 'Room name')}">
+      <select data-rtype="${r.id}" aria-label="${tr('房間類型', 'Room type')}">${Object.entries(ROOM_TYPES).map(([k, v]) => `<option value="${k}" ${r.type === k ? 'selected' : ''}>${pick(v.label)}</option>`).join('')}</select>
+      <button class="icon-btn" type="button" data-del="room:${r.id}" aria-label="${tr('刪除房間', 'Delete room')}">✕</button></div>`).join('') : `<p class="note">${tr('未標記房間。', 'No rooms marked yet.')}</p>`;
+  $('#winList').innerHTML = S.windows.length ? S.windows.map((w, i) => `<div class="list-item win">
+      <span class="badge">W${i + 1}</span>
+      <input type="text" value="${esc(w.name)}" placeholder="${tr('名稱（選填）', 'Name (optional)')}" data-wname="${w.id}" aria-label="${tr('窗戶名稱', 'Window name')}">
+      <button class="icon-btn" type="button" data-del="win:${w.id}" aria-label="${tr('刪除窗戶', 'Delete window')}">✕</button></div>`).join('') : `<p class="note">${tr('未標記窗戶。', 'No windows marked yet.')}</p>`;
+}
+$('#pane-setup').addEventListener('input', e => {
+  const t = e.target;
+  if (t.dataset.rname) { S.rooms.find(r => r.id === t.dataset.rname).name = t.value; save(); drawDynamic(); }
+  if (t.dataset.wname) { S.windows.find(w => w.id === t.dataset.wname).name = t.value; save(); drawDynamic(); }
+});
+$('#pane-setup').addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.rtype) { S.rooms.find(r => r.id === t.dataset.rtype).type = t.value; save(); drawDynamic(); }
+});
+$('#pane-setup').addEventListener('click', e => { const b = e.target.closest('[data-del]'); if (b) deleteMarker(b.dataset.del); });
+
+function renderTargets() {
+  const html = `<span class="label-sm">${ui('readFrom')}</span>` + targetList().map(t =>
+    `<button type="button" class="chip" data-target="${esc(t.key)}" aria-pressed="${t.key === S.target}"><b>${t.zh}</b>${esc(t.label)}</button>`).join('');
+  const x = $('#targets'); if (x.innerHTML !== html) x.innerHTML = html;
+}
+$('#targets').addEventListener('click', e => { const b = e.target.closest('[data-target]'); if (b) { S.target = b.dataset.target; save(); drawDynamic(); } });
+
+// ---------- Reading ----------
+const pill = st => `<span class="pill ${st.good ? 'good' : 'bad'}"><span class="zh">${st.zh}</span>${en() ? ' ' + st.en : ''}</span>`;
+function dirLabel(b) {
+  const t = TRI[sec8(b)], m = mtn24(b);
+  return tr(`${t.dirZh}方，<span class="zh">${MTN[m]}</span>山 <span class="mono">${fmt(b)}</span>`,
+    `${t.dirEn} <span class="zh">${t.dirZh}</span>, <span class="zh">${MTN[m]}</span> ${MTN_PY[m]} <span class="mono">${fmt(b)}</span>`);
+}
+function boundaryWarn(b) {
+  const to8 = Math.min(...[0, 1, 2, 3, 4, 5, 6, 7].map(i => angDiff(b, i * 45 + 22.5)));
+  const to24 = Math.min(...Array.from({ length: 24 }, (_, i) => angDiff(b, i * 15 + 7.5)));
+  if (to8 < 3) return tr('位於兩卦交界 3° 以內（出卦），請重新確認北方再作判斷。', 'Sits within 3° of the line between two trigrams (出卦). Re-check north before relying on this reading.');
+  if (to24 < 1.5) return tr('位於兩山交界（空亡），請重新確認北方再作判斷。', 'Sits on the line between two mountains (空亡). Re-check north before relying on this reading.');
+  return '';
+}
+function targetDomain(t) {
+  if (t.key === 'sofa') return { key: 'rest', who: tr('沙發', 'the sofa'), life: tr('休息、家人傾談及待客', 'rest, family talk and hosting') };
+  if (t.key === 'bed') return { key: 'sleep', who: tr('床', 'the bed'), life: tr('睡眠、健康及感情', 'sleep, health and relationships') };
+  if (t.room) { const lab = pick((ROOM_TYPES[t.room.type] || ROOM_TYPES.other).label); return { key: 'house', who: esc(t.label), life: tr(`${lab}內的活動`, `what happens in the ${lab.toLowerCase()}`) }; }
+  return { key: 'house', who: tr('全屋', 'the whole home'), life: tr('全家整體運勢', 'the household as a whole') };
+}
+function windowAdvice(st) {
+  if (st.good) return tr('保持此窗通透明淨，早上多開窗，迎入吉氣。', 'Keep this window clear and clean, and open it in the morning so good qi can come in.');
+  return tr(`晚上拉上窗簾，避免長時間打開。可在附近擺放${pick(REMEDY_ITEM[st.remedy])}，以洩${el(st.el)}氣。`,
+    `Keep it curtained at night and avoid long openings. To weaken ${el(st.el)}, add ${pick(REMEDY_ITEM[st.remedy])} near it.`);
+}
+const personalPill = pst => `<span class="pill ${pst.good ? 'good' : 'bad'}" title="${tr('命卦方位', 'Personal Gua star')}">命 <span class="zh">${pst.zh}</span>${en() ? ' ' + pst.en : ''}</span>`;
+function renderReading() {
+  const h = house(), t = activeTarget(), d = targetDomain(t), kua = kuaOf(S.kua.year, S.kua.gender);
+  const facingMtn = mtn24(h.facing), sittingMtn = mtn24(h.sitting);
+  const tri = h.tri, fT = TRI[sec8(h.facing)];
+  const fWarn = boundaryWarn(h.facing);
+  let html = '';
+  html += `<section class="block"><h2>${tr('宅卦', 'The house 宅卦')}</h2>
+    <div class="house-card">
+      <div class="glyph">${tri.zh}<small>${tr(tri.zh + '宅', tri.py + ' house')}</small></div>
+      <h3>${tr(`坐${tri.dirZh}向${fT.dirZh}`, `Sits ${tri.dirEn}, faces ${fT.dirEn}`)}</h3>
+      <div class="zh" style="font-size:15px">坐${MTN[sittingMtn]}向${MTN[facingMtn]} · ${tri.zh}宅 · ${h.east ? '東四宅' : '西四宅'}</div>
+      <div class="note">${tr(`五行屬${el(tri.el)} · 洛書 ${tri.num}`, `${h.east ? 'East' : 'West'} group house · ${el(tri.el)} · Lo Shu ${tri.num}`)}</div>
+    </div>
+    <dl class="kv">
+      <dt>${tr('大門向度', 'Door faces')}</dt><dd>${dirLabel(h.facing)}${S.doorManual ? tr('（手動設定）', ' (set by hand)') : ''}</dd>
+      <dt>${tr('坐山', 'House sits')}</dt><dd>${dirLabel(h.sitting)}</dd>
+      <dt>${tr('卦象', 'Trigram')}</dt><dd>${tr(`<span class="zh">${tri.zh}</span>為${tri.img[0]}；${tri.fam[0]}；${tri.body[0]}`, `<span class="zh">${tri.zh}</span> ${tri.img[1]}, ${tri.fam[1].toLowerCase()}, ${tri.body[1].toLowerCase()}`)}</dd>
+      <dt>${tr('主管', 'Life area')}</dt><dd>${pick(tri.area)}</dd>
+      <dt>${tr('季節、顏色', 'Season, colour')}</dt><dd>${pick(tri.season)}${tr('；', '; ')}${pick(tri.color)}</dd>
+      <dt>${tr('適合', 'Suits people')}</dt><dd>${h.east ? tr('東四命：命卦 1、3、4、9', 'East group: Gua 1, 3, 4, 9') : tr('西四命：命卦 2、6、7、8', 'West group: Gua 2, 6, 7, 8')}${kua ? (EAST_GROUP.has(kua.idx) === h.east ? ` · <span class="pill good">${tr('與居住者相配', 'matches the occupant')}</span>` : ` · <span class="pill warn">${tr('與居住者不相配', 'differs from the occupant')}</span>`) : ''}</dd>
+    </dl>
+    ${fWarn ? `<div class="item warn"><p>${fWarn}</p></div>` : ''}
+  </section>`;
+  if (S.school === 'flying') { $('#pane-reading').innerHTML = html + flyingReading(h, t, d); return; }
+  if (S.school === 'naqi') { $('#pane-reading').innerHTML = html + naqiReading(h, t, d); return; }
+  const layout = [3, 4, 5, 2, -1, 6, 1, 0, 7]; // South on top, East on the left
+  html += `<section class="block"><h2>${tr('屋中心八方吉凶', 'Eight sectors from the house centre')}</h2><div class="loshu">` + layout.map(i => {
+    if (i < 0) return `<div class="cell mid"><span class="s">${tri.zh}</span><span>${tr('中宮', 'centre')}</span></div>`;
+    const st = starAt(h.gua, i), T = TRI[i];
+    return `<div class="cell ${st.good ? 'good' : 'bad'}"><span class="d"><span>${tr(T.dirZh, T.dir)} <span class="zh">${T.zh}</span></span><span>${T.num}</span></span><span class="s">${st.zh}</span><span>${tr(st.star, st.en)}</span></div>`;
+  }).join('') + `</div><p class="note">${tr('依傳統排法，南方在上、北方在下。綠色為四吉星，紅色為四凶星。', 'Drawn the traditional Chinese way, with South at the top. Green sectors are the four lucky stars, red the four unlucky ones.')}</p></section>`;
+
+  html += `<section class="block"><h2>${tr(`以「${esc(t.label)}」為中心`, `Reading from ${esc(t.label)}`)}</h2>`;
+  if (t.key === 'sofa' || t.key === 'bed') html += orientationReading(t, h, kua);
+  const doorB = bearing(t.pt, S.door), dT = TRI[sec8(doorB)], dSt = starAt(h.gua, sec8(doorB));
+  if (t.key !== 'center') {
+    html += `<div class="item ${dSt.good ? 'good' : 'bad'}"><div class="head"><strong>${tr('大門', 'Front door')}</strong>${pill(dSt)}</div>
+      <p class="meta">${tr(`位於${d.who}的${dirLabel(doorB)}`, `Lies ${dirLabel(doorB)} of ${d.who}`)}</p>
+      <p>${tr(`由大門進入的氣，從${dT.dirZh}方到達${d.who}。`, `Qi entering by the main door reaches ${d.who} from its ${dT.dirEn.toLowerCase()} side. `)}${pick(dSt[d.key])}</p></div>`;
+  } else {
+    html += `<div class="item ${dSt.good ? 'good' : 'bad'}"><div class="head"><strong>${tr('大門', 'Front door')}</strong>${pill(dSt)}</div>
+      <p class="meta">${tr(`大門位於屋的${dT.dirZh}方（<span class="zh">${dT.zh}</span>）`, `Door sits in the ${dT.dirEn} sector <span class="zh">${dT.zh}</span> of the house`)}</p>
+      <p>${dSt.good ? tr('大門位於吉方，為全屋納入吉氣。', 'A door in a lucky sector draws good qi into the whole home. ')
+        : tr('大門位於凶方，會將該星之氣引入屋內。不少流派會改門或調整入口動線，引向吉方。', 'A door in an unlucky sector lets that star\'s qi into the home. Many schools re-hang the door or move the entrance flow toward a lucky sector. ')}${pick(dSt.house)}</p></div>`;
+  }
+  if (!S.windows.length) html += `<p class="note">${tr('未標記窗戶。按 <b>+ 窗戶</b>，再點擊圖則上每個窗戶。', 'No windows marked. Choose <b>+ Window</b> and click each window on the plan.')}</p>`;
+  const rows = S.windows.map((w, i) => ({ w, i, b: bearing(t.pt, w) })).sort((a, b) => a.b - b.b);
+  rows.forEach(({ w, i, b }) => {
+    const sec = sec8(b), st = starAt(h.gua, sec), T = TRI[sec], rel = relation(st.el, T.el);
+    const outT = TRI[sec8(bearing(S.center, w))];
+    const pst = kua ? starAt(kua.idx, sec) : null;
+    const m = mtn24(b);
+    const strength = st.good ? (rel.strong ? tr('吉星得力', 'strong and well supported') : tr('吉星力弱', 'present but held back'))
+      : (rel.strong ? tr('凶星得勢，須多加留意', 'strong, so take it seriously') : tr('凶星受制，影響較輕', 'held in check, so its effect is milder'));
+    const notes = [];
+    if (t.key === 'bed' && angDiff(b, toBearing(S.bed.rot)) < 40) notes.push(tr('窗在床頭後方：床頭宜靠實牆（靠山）。可移床，或晚上把窗完全遮蓋。', 'Behind the headboard: a bed needs a solid wall behind the head (靠山). Move the bed or keep this window fully covered at night.'));
+    if (t.key === 'sofa' && angDiff(b, toBearing(S.sofa.rot) + 180) < 40) notes.push(tr('窗在沙發後方：坐者缺乏靠山。可在後方放置矮櫃或高身植物。', 'Behind the sofa: there is no backing (靠山) for whoever sits here. A console table or tall plant behind helps.'));
+    if (t.key === 'center' && angDiff(b, doorB + 180) < 15) notes.push(tr('窗與大門成一直線（穿堂煞）：氣直入直出。可用屏風、植物或窗簾阻隔。', 'Straight in line with the front door (穿堂煞): qi rushes through and out. Break the line with a screen, plant or curtain.'));
+    html += `<div class="item ${st.good ? 'good' : 'bad'}">
+      <div class="head"><span class="badge">W${i + 1}</span><strong>${esc(w.name || tr('窗戶', 'Window'))}</strong>${pill(st)}${pst ? personalPill(pst) : ''}</div>
+      <p class="meta">${tr(`位於${d.who}的${dirLabel(b)} · 向外朝${outT.dirZh} · 經絡：<span class="zh">${ORGAN[m]}</span>`,
+        `Lies ${dirLabel(b)} of ${d.who} · faces out to the ${outT.dirEn.toLowerCase()} · organ ring: <span class="zh">${ORGAN[m]}</span> ${ORGAN_EN[m].toLowerCase()}`)}</p>
+      <p>${tr(`此窗的光線與氣流經<span class="zh">${T.zh}</span>（${T.img[0]}）方到達${d.who}，屬本宅<b>${st.zh}</b>星（${st.star}，五行屬${el(st.el)}）。對${d.life}而言：${pick(st[d.key])}`,
+        `Light and air from here reach ${d.who} through the <span class="zh">${T.zh}</span> ${T.img[1]} sector, the house's <b>${st.zh} ${st.en}</b> star (${st.star}, ${el(st.el)}). For ${d.life}: ${pick(st[d.key])}`)}</p>
+      <p class="meta">${tr(`${el(st.el)}星落${el(T.el)}宮：${rel.text}，${strength}。`, `${el(st.el)} star in a ${el(T.el)} palace: ${rel.text}, so the star is ${strength}.`)}${pst ? tr(`對居住者而言，此方為${pst.zh}。`, ` For the occupant this direction is <span class="zh">${pst.zh}</span> ${pst.en}.`) : ''}</p>
+      <p>${windowAdvice(st)}</p>
+      ${notes.map(n => `<p class="callout">${n}</p>`).join('')}
+    </div>`;
+  });
+  html += `</section>`;
+  if (S.rooms.length) {
+    html += `<section class="block"><h2>${tr('由屋中心看各房間', 'Rooms from the house centre')}</h2>`;
+    S.rooms.forEach(r => {
+      const b = bearing(S.center, r), sec = sec8(b), st = starAt(h.gua, sec), rt = ROOM_TYPES[r.type] || ROOM_TYPES.other;
+      const goodKeys = rt.good.map(k => STARS[k]);
+      const fits = goodKeys.length ? goodKeys.includes(st) : null;
+      html += `<div class="item ${fits === null ? (st.good ? 'good' : 'bad') : fits ? 'good' : 'warn'}">
+        <div class="head"><strong>${esc(r.name || tr('房間', 'Room'))}</strong><span class="note">${pick(rt.label)}</span>${pill(st)}${fits === null ? '' : fits ? `<span class="pill good">${tr('相配', 'good fit')}</span>` : `<span class="pill warn">${tr('不相配', 'poor fit')}</span>`}</div>
+        <p class="meta">${tr(`${TRI[sec].dirZh}方（<span class="zh">${TRI[sec].zh}</span>）· ${TRI[sec].area[0]}`, `${TRI[sec].dirEn} sector <span class="zh">${TRI[sec].zh}</span> · ${TRI[sec].area[1].toLowerCase()}`)}</p>
+        <p>${pick(st.house)}${tr(` 傳統宜作：${st.use[0]}。`, ` Traditionally suits: ${st.use[1].toLowerCase()}.`)}${rt.note && fits ? ' ' + pick(rt.note) : ''}</p>
+      </div>`;
+    });
+    html += `</section>`;
+  }
+  $('#pane-reading').innerHTML = html;
+}
+const nb = n => `<span class="nb ${nCls(n)}">${n}</span>`;
+function flyingReading(h, t, d) {
+  const P = S.period, FS = flyChart(P, h.sitting, h.facing);
+  const pn = '一二三四五六七八九'[P - 1], yr = PERIODS[P - 1][1];
+  const dirTxt = f => tr(f.fwd ? '順飛' : '逆飛', f.fwd ? 'flies forward' : 'flies backward');
+  let html = `<section class="block"><h2>${tr('玄空飛星盤', 'Flying Star chart 玄空飛星')}</h2>
+    <dl class="kv">
+      <dt>${tr('元運', 'Period')}</dt><dd>${tr(`${pn}運（${yr}–${yr + 19}）`, `Period ${P} (${yr}–${yr + 19})`)}</dd>
+      <dt>${tr('山星入中', 'Mountain star')}</dt><dd>${nb(FS.mtn.c)} ${dirTxt(FS.mtn)}</dd>
+      <dt>${tr('向星入中', 'Water star')}</dt><dd>${nb(FS.wat.c)} ${dirTxt(FS.wat)}</dd>
+      ${FS.pattern ? `<dt>${tr('格局', 'Pattern')}</dt><dd>${tr(`<b>${FS.pattern[0]}</b>`, FS.pattern[1])}</dd>` : ''}
+    </dl>
+    <div class="loshu">` + [3, 4, 5, 2, -1, 6, 1, 0, 7].map(i => {
+      if (i < 0) return `<div class="fs-cell mid"><span class="d"><span>${tr('中宮', 'Centre')}</span></span><span class="m t-${nCls(FS.mtn.c)}">${FS.mtn.c}</span><span class="w t-${nCls(FS.wat.c)}">${FS.wat.c}</span><span class="pd">${P}</span></div>`;
+      const T = TRI[i], m = FS.mtn.p[i], w = FS.wat.p[i];
+      return `<div class="fs-cell"><span class="d"><span>${tr(T.dirZh, T.dir)} <span class="zh">${T.zh}</span></span>${i === FS.fi ? `<b>${tr('向', 'facing')}</b>` : i === FS.si ? `<b>${tr('坐', 'sitting')}</b>` : ''}</span><span class="m t-${nCls(m)}">${m}</span><span class="w t-${nCls(w)}">${w}</span><span class="pd">${FS.base.p[i]}</span></div>`;
+    }).join('') + `</div>
+    <div class="legend"><span>${tr('左上：山星（人丁健康）', 'Top left: mountain star (health, people)')}</span><span>${tr('右上：向星（財運）', 'Top right: water star (wealth)')}</span><span>${tr('下：運星', 'Bottom: period star')}</span></div>
+    <div class="legend">${nb(1)}${nb(2)}${nb(3)}${nb(4)}<span>${tr('紅', 'red')}</span>${nb(5)}<span>${tr('啡', 'brown')}</span>${nb(6)}${nb(7)}${nb(8)}${nb(9)}<span>${tr('綠', 'green')}</span><span>· ${tr('南方在上', 'South on top')}</span></div>
+  </section>`;
+  const timePill = n => { const tm = timely(n, P); return `<span class="pill ${tm.good ? 'good' : 'warn'}">${tr(tm.zh, tm.en)}</span>`; };
+  const starLine = n => `${nb(n)} <span class="zh">${NINE[n].zh}${NINE[n].star}</span> ${timePill(n)} ${pick(NINE[n].mean)}`;
+  const advice = w => {
+    if (w === 5 || w === 2) return tr(`向星${NINE[w].zh}入此方，此窗宜少開、多拉簾，可擺放${NINE[w].remedy[0]}。`, `The ${w} water star sits here. Keep this window closed and curtained where possible, and place ${NINE[w].remedy[1]} nearby.`);
+    if (timely(w, P).good) return tr('旺氣向星到此，宜多開窗、保持明亮通爽，引旺氣入屋。', 'A timely water star sits here. Open this window often and keep it bright to draw the good qi in.');
+    if (NINE[w].remedy) return tr(`向星失令，宜少開此窗，可擺放${NINE[w].remedy[0]}。`, `The water star here is out of season. Open this window less, and place ${NINE[w].remedy[1]} nearby.`);
+    return tr('向星失令，不宜長開，保持整潔即可。', 'The water star here is out of season. Avoid leaving this window open for long; just keep it tidy.');
+  };
+  html += `<section class="block"><h2>${tr(`以「${esc(t.label)}」為中心`, `Reading from ${esc(t.label)}`)}</h2>`;
+  const doorB = bearing(t.pt, S.door), ds = sec8(doorB), dw = FS.wat.p[ds];
+  html += `<div class="item ${timely(dw, P).good ? 'good' : 'bad'}"><div class="head"><strong>${tr('大門', 'Front door')}</strong>${nb(FS.mtn.p[ds])}${nb(dw)}</div>
+    <p class="meta">${tr(`位於${d.who}的${dirLabel(doorB)}`, `Lies ${dirLabel(doorB)} of ${d.who}`)}</p>
+    <p>${tr('向星（財）', 'Water star (wealth)')}: ${starLine(dw)}</p>
+    <p>${timely(dw, P).good ? tr('大門納入旺氣，宜保持門前開揚明亮。', 'The door takes in timely qi. Keep the entrance open and bright.') : tr('大門向星失令，可在門內設玄關緩衝，並按向星化解。', 'The door\'s water star is out of season. A screen or entry table inside the door softens it.')}</p></div>`;
+  if (t.key === 'bed' || t.key === 'sofa') {
+    const ls = sec8(bearing(S.center, t.pt)), m = FS.mtn.p[ls];
+    html += `<div class="item ${timely(m, P).good ? 'good' : 'bad'}"><div class="head"><strong>${t.key === 'bed' ? tr('床位', 'Bed position') : tr('沙發位', 'Sofa position')}</strong>${nb(m)}${nb(FS.wat.p[ls])}</div>
+      <p class="meta">${tr(`位於屋的${TRI[ls].dirZh}宮`, `In the house's ${TRI[ls].dirEn} palace`)}</p>
+      <p>${tr('山星主人丁健康，對床及座位最重要：', 'The mountain star governs health and people, which matters most for a bed or seat: ')}${starLine(m)}</p></div>`;
+  }
+  if (!S.windows.length) html += `<p class="note">${tr('未標記窗戶。按 <b>+ 窗戶</b>，再點擊圖則上每個窗戶。', 'No windows marked. Choose <b>+ Window</b> and click each window on the plan.')}</p>`;
+  S.windows.map((w, i) => ({ w, i, b: bearing(t.pt, w) })).sort((a, b) => a.b - b.b).forEach(({ w, i, b }) => {
+    const sec = sec8(b), m = FS.mtn.p[sec], wa = FS.wat.p[sec], T = TRI[sec];
+    html += `<div class="item ${wa === 5 || wa === 2 ? 'bad' : timely(wa, P).good ? 'good' : 'warn'}">
+      <div class="head"><span class="badge">W${i + 1}</span><strong>${esc(w.name || tr('窗戶', 'Window'))}</strong>${nb(m)}${nb(wa)}</div>
+      <p class="meta">${tr(`位於${d.who}的${dirLabel(b)}`, `Lies ${dirLabel(b)} of ${d.who}`)} · ${tr(`${T.dirZh}宮（${T.zh}）`, `${T.dirEn} palace ${T.zh}`)} · ${tr('運星', 'period star')} ${FS.base.p[sec]}</p>
+      <p>${tr('向星（財）', 'Water star (wealth)')}: ${starLine(wa)}</p>
+      <p>${tr('山星（丁）', 'Mountain star (health)')}: ${starLine(m)}</p>
+      <p>${advice(wa)}</p>
+    </div>`;
+  });
+  html += `</section>`;
+  if (S.rooms.length) {
+    html += `<section class="block"><h2>${tr('由屋中心看各房間', 'Rooms from the house centre')}</h2>`;
+    S.rooms.forEach(r => {
+      const sec = sec8(bearing(S.center, r)), m = FS.mtn.p[sec], wa = FS.wat.p[sec], rt = ROOM_TYPES[r.type] || ROOM_TYPES.other;
+      const service = r.type === 'kitchen' || r.type === 'bath', key = r.type === 'bedroom' ? m : wa;
+      const fits = service ? !timely(key, P).good : timely(key, P).good;
+      html += `<div class="item ${fits ? 'good' : 'warn'}"><div class="head"><strong>${esc(r.name || tr('房間', 'Room'))}</strong><span class="note">${pick(rt.label)}</span>${nb(m)}${nb(wa)}${fits ? `<span class="pill good">${tr('相配', 'good fit')}</span>` : `<span class="pill warn">${tr('不相配', 'poor fit')}</span>`}</div>
+        <p class="meta">${tr(`${TRI[sec].dirZh}宮（${TRI[sec].zh}）`, `${TRI[sec].dirEn} palace ${TRI[sec].zh}`)}</p>
+        <p>${r.type === 'bedroom' ? tr('睡房看山星：', 'Bedrooms follow the mountain star: ') + starLine(m) : service ? tr('廚廁宜壓在失令之星上：', 'Kitchens and bathrooms are best on out-of-season stars: ') + starLine(wa) : tr('活動空間看向星：', 'Active rooms follow the water star: ') + starLine(wa)}</p></div>`;
+    });
+    html += `</section>`;
+  }
+  return html;
+}
+$('#pane-reading').addEventListener('click', e => {
+  const tg = e.target.closest('[data-nqtoggle]'), rs = e.target.closest('[data-nqreset]');
+  if (!tg && !rs) return;
+  S.naqiMap = S.naqiMap || {};
+  if (rs) delete S.naqiMap[S.period];
+  else { const i = +tg.dataset.nqtoggle, z = naqi(S.period).zheng.slice(); z[i] = !z[i]; S.naqiMap[S.period] = z; }
+  save(); drawDynamic();
+});
+function naqiReading(h, t, d) {
+  const P = S.period, NQ = naqi(P), pn = '一二三四五六七八九'[P - 1], yr = PERIODS[P - 1][1];
+  const role = i => NQ.zheng[i] ? tr('正神', 'Zheng 正神') : tr('零神', 'Ling 零神');
+  const pal = i => tr(`${TRI[i].dirZh}宮（${TRI[i].zh}）`, `${TRI[i].dirEn} palace ${TRI[i].zh}`);
+  const mainTag = i => i === NQ.mainZ ? tr('（正神正位）', ' (main 正神)') : i === NQ.mainL ? tr('（零神正位）', ' (main 零神)') : '';
+  let html = `<section class="block"><h2>${tr('納氣（零正）盤', 'Na Qi chart 納氣 (零正)')}</h2>
+    <dl class="kv">
+      <dt>${tr('元運', 'Period')}</dt><dd>${tr(`${pn}運（${yr}–${yr + 19}）· ${NQ.upper ? '上元' : '下元'}`, `Period ${P} (${yr}–${yr + 19}), ${NQ.upper ? 'upper era 上元' : 'lower era 下元'}`)}</dd>
+      ${P === 5 ? `<dd class="note" style="grid-column:1/-1">${tr('五運前十年屬上元、後十年屬下元，此處按下元排列。', 'Period 5 splits: its first ten years follow the upper era and its last ten the lower era. This chart uses the lower era.')}</dd>` : `
+      <dt>${tr('正神正位', 'Main 正神')}</dt><dd>${nqB(P, true)} ${pal(NQ.mainZ)}${tr('，宜有山、宜實、宜靜', ': wants mountains, solid and quiet')}</dd>
+      <dt>${tr('零神正位', 'Main 零神')}</dt><dd>${nqB(10 - P, false)} ${pal(NQ.mainL)}${tr('，宜見水、宜空、宜開門窗', ': wants water, openness, doors and windows')}</dd>`}
+    </dl>
+    <div class="loshu">` + [3, 4, 5, 2, -1, 6, 1, 0, 7].map(i => {
+      if (i < 0) return `<div class="nq-cell mid">${tr('中宮', 'Centre')}</div>`;
+      const n = LOSHU[i], z = NQ.zheng[i], main = i === NQ.mainZ || i === NQ.mainL;
+      return `<button type="button" data-nqtoggle="${i}" title="${tr('撳一下切換正／零', 'Tap to switch 正 / 零')}" class="nq-cell ${z ? 'zheng' : 'ling'}${main ? ' main' : ''}${NQ.custom && z !== naqiDefault(P)[i] ? ' custom' : ''}"><span class="d"><span>${tr(TRI[i].dirZh, TRI[i].dir)} <span class="zh">${TRI[i].zh}</span></span></span><span class="n">${n}</span><span class="zl">${z ? '正' : '零'}</span></button>`;
+    }).join('') + `</div>
+    <div class="nq-tools"><span class="note">${tr(`撳格仔可切換正／零，每個運各自儲存。${NQ.custom ? '此運已自訂。' : ''}`, `Tap a square to switch it between 正 and 零. Each period keeps its own layout.${NQ.custom ? ' This period is customised.' : ''}`)}</span>${NQ.custom ? `<button type="button" class="btn" data-nqreset="1">${tr('還原預設', 'Restore default')}</button>` : ''}</div>
+    <div class="legend"><span><b class="t-nz">${tr('藍「正」', 'Blue 正')}</b>${tr('：正神方，宜山宜靜，忌見水及開口', ': Zheng sectors want mountains and calm, not water or openings')}</span><span><b class="t-n1">${tr('紅「零」', 'Red 零')}</b>${tr('：零神方，宜水宜動，宜門窗納氣', ': Ling sectors want water, movement, doors and windows')}</span><span>· ${tr('粗框為本運正位', 'thick border: this period\'s main pair')} · ${tr('南方在上', 'South on top')}</span></div>
+  </section>`;
+  const open = (i, what) => NQ.zheng[i]
+    ? tr(`${what}開在正神方，為「正神下水」，主損丁破財。宜少開、拉簾，或在此方擺放穩重實物。`, `This ${what} opens onto a 正神 sector ("正神下水"), traditionally a drain on health and money. Keep it closed or curtained, or place something solid and heavy on this side.`)
+    : tr(`${what}開在零神方，得以納入當運旺氣，主進財。宜多開、保持明亮通爽，見水更佳。`, `This ${what} opens onto a 零神 sector and draws in the period's prosperous qi for wealth. Open it often and keep it bright; a view of water helps.`);
+  // an opening in 零 or a solid/quiet use in 正 makes that palace's trigram 得運; the reverse makes it 失運
+  const luck = (i, ok) => { const G = GUA_LUCK[i]; return `<p><span class="pill ${ok ? 'good' : 'warn'}">${G.g}${tr('卦', ' trigram')} ${ok ? tr('得運', 'in luck 得運') : tr('失運', 'out of luck 失運')}</span> ${tr(ok ? '主' : '易應：', ok ? 'Brings ' : 'Watch for ')}${pick(ok ? G.win : G.lose)}${tr('。', '.')}</p>`; };
+  html += `<section class="block"><h2>${tr(`以「${esc(t.label)}」為中心`, `Reading from ${esc(t.label)}`)}</h2>`;
+  const doorB = bearing(t.pt, S.door), ds = sec8(doorB);
+  html += `<div class="item ${NQ.zheng[ds] ? 'bad' : 'good'}"><div class="head"><strong>${tr('大門', 'Front door')}</strong>${nqB(LOSHU[ds], NQ.zheng[ds])}<span class="pill ${NQ.zheng[ds] ? 'warn' : 'good'}">${role(ds)}${mainTag(ds)}</span></div>
+    <p class="meta">${tr(`位於${d.who}的${dirLabel(doorB)}`, `Lies ${dirLabel(doorB)} of ${d.who}`)} · ${pal(ds)}</p>
+    <p>${open(ds, tr('大門', 'door'))}</p>${luck(ds, !NQ.zheng[ds])}</div>`;
+  if (t.key === 'bed' || t.key === 'sofa') {
+    const ls = sec8(bearing(S.center, t.pt));
+    html += `<div class="item ${NQ.zheng[ls] ? 'good' : 'warn'}"><div class="head"><strong>${t.key === 'bed' ? tr('床位', 'Bed position') : tr('沙發位', 'Sofa position')}</strong>${nqB(LOSHU[ls], NQ.zheng[ls])}<span class="pill ${NQ.zheng[ls] ? 'good' : 'warn'}">${role(ls)}${mainTag(ls)}</span></div>
+      <p class="meta">${tr(`位於屋的${pal(ls)}`, `In the house's ${pal(ls)}`)}</p>
+      <p>${NQ.zheng[ls] ? tr('坐於正神方，得靠得穩，利人丁健康及休息。', 'It sits in a 正神 sector, which gives support and calm, good for health and rest.') : tr('位於零神方，此方宜動宜開，不利長時間靜坐或睡眠。可在背後加實牆或高身傢具作靠。', 'It sits in a 零神 sector, which suits movement and openness more than rest. A solid wall or tall furniture behind it gives support.')}</p>${luck(ls, NQ.zheng[ls])}</div>`;
+  }
+  if (!S.windows.length) html += `<p class="note">${tr('未標記窗戶。按 <b>+ 窗戶</b>，再點擊圖則上每個窗戶。', 'No windows marked. Choose <b>+ Window</b> and click each window on the plan.')}</p>`;
+  S.windows.map((w, i) => ({ w, i, b: bearing(t.pt, w) })).sort((a, b) => a.b - b.b).forEach(({ w, i, b }) => {
+    const sec = sec8(b), z = NQ.zheng[sec];
+    html += `<div class="item ${z ? 'bad' : 'good'}">
+      <div class="head"><span class="badge">W${i + 1}</span><strong>${esc(w.name || tr('窗戶', 'Window'))}</strong>${nqB(LOSHU[sec], z)}<span class="pill ${z ? 'warn' : 'good'}">${role(sec)}${mainTag(sec)}</span></div>
+      <p class="meta">${tr(`位於${d.who}的${dirLabel(b)}`, `Lies ${dirLabel(b)} of ${d.who}`)} · ${pal(sec)}</p>
+      <p>${open(sec, tr('窗', 'window'))}</p>${luck(sec, !z)}
+    </div>`;
+  });
+  html += `</section>`;
+  if (S.rooms.length) {
+    html += `<section class="block"><h2>${tr('由屋中心看各房間', 'Rooms from the house centre')}</h2>`;
+    S.rooms.forEach(r => {
+      const sec = sec8(bearing(S.center, r)), z = NQ.zheng[sec], rt = ROOM_TYPES[r.type] || ROOM_TYPES.other;
+      const quiet = r.type === 'bedroom' || r.type === 'study', wet = r.type === 'bath' || r.type === 'kitchen';
+      const fits = quiet ? z : !z;
+      html += `<div class="item ${fits ? 'good' : 'warn'}"><div class="head"><strong>${esc(r.name || tr('房間', 'Room'))}</strong><span class="note">${pick(rt.label)}</span>${nqB(LOSHU[sec], z)}<span class="pill ${fits ? 'good' : 'warn'}">${role(sec)}</span></div>
+        <p class="meta">${pal(sec)}</p>
+        <p>${quiet ? (z ? tr('睡房、書房宜靜，落在正神方相配。', 'Bedrooms and studies want calm, so a 正神 sector suits them.') : tr('睡房、書房落在零神方，氣場較動，宜多用厚簾及實色。', 'This quiet room sits in a 零神 sector, which is lively. Heavy curtains and solid colours help.'))
+          : wet ? (z ? tr('廚廁有水，落在正神方即「正神下水」，宜保持乾爽潔淨。', 'Kitchens and bathrooms bring water; in a 正神 sector that is "正神下水". Keep it dry and clean.') : tr('廚廁有水，落在零神方，水見零神為合。', 'Kitchens and bathrooms bring water, which suits a 零神 sector.'))
+          : (z ? tr('活動空間落在正神方，宜少放水景，保持穩重。', 'An active room in a 正神 sector: avoid water features and keep it settled.') : tr('客廳、飯廳等活動空間落在零神方，宜開揚，可放水景或魚缸。', 'Living and dining spaces in a 零神 sector suit openness; a water feature or fish tank fits here.'))}</p></div>`;
+    });
+    html += `</section>`;
+  }
+  return html;
+}
+function orientationReading(t, h, kua) {
+  const isBed = t.key === 'bed', m = isBed ? S.bed : S.sofa;
+  const b = toBearing(m.rot), sec = sec8(b), st = starAt(h.gua, sec), pst = kua ? starAt(kua.idx, sec) : null, T = TRI[sec];
+  const doorB = bearing(m, S.door);
+  const text = pick(st[isBed ? 'sleep' : 'rest']);
+  let s = `<div class="item ${(pst || st).good ? 'good' : 'bad'}"><div class="head"><strong>${isBed ? tr('床頭朝向', 'Head of the bed points') : tr('沙發朝向', 'Sofa faces')}</strong>${pill(st)}${pst ? personalPill(pst) : ''}</div>
+    <p class="meta">${dirLabel(b)}</p>
+    <p>${isBed ? tr(`床頭朝${T.dirZh}，得${st.zh}星之氣。`, `Sleeping with the head toward the ${T.dirEn.toLowerCase()} draws on the ${st.zh} ${st.en} star. `) : tr(`坐向${T.dirZh}，得${st.zh}星之氣。`, `Sitting facing the ${T.dirEn.toLowerCase()} draws on the ${st.zh} ${st.en} star. `)}${text}</p>
+    <p class="meta">${kua ? tr(`居住者命卦為 ${kua.num}。${isBed ? '床位' : '座位'}以個人命卦最為重要，宜選生氣、天醫、延年或伏位。`, `For the occupant (Gua ${kua.num}), the personal reading weighs most for ${isBed ? 'a bed' : 'a seat'}. Aim for 生氣, 天醫, 延年 or 伏位.`)
+      : tr('在「設定」填上居住者出生年份，即可得出其命卦方位，這對床及沙發最為重要。', 'Add the occupant\'s birth year in Setup to get their personal direction (命卦), which matters most for beds and sofas.')}</p></div>`;
+  if (isBed && angDiff(doorB, b + 180) < 20) s += `<div class="item warn"><p>${tr('<b>腳尾對門。</b>民間稱為「棺材位」。可轉動床位，或在床與門之間放置床尾板或長凳。', '<b>Feet point at the door.</b> This is the "coffin position" in folk tradition. Turn the bed or place a footboard or bench between bed and door.')}</p></div>`;
+  if (!isBed) {
+    const fd = angDiff(doorB, b);
+    if (fd < 70) s += `<div class="item good"><p>${tr('<b>坐擁主位。</b>坐在沙發上可看見大門，令人有安全感及掌控感。', '<b>Command position.</b> The door is in view from the sofa, which gives a sense of control and safety.')}</p></div>`;
+    else if (fd > 135) s += `<div class="item warn"><p>${tr('<b>背向大門。</b>坐者看不見進來的人。可轉動沙發，或擺放鏡子以看到大門。', '<b>Back to the door.</b> People seated here cannot see who comes in. Turn the sofa or put a mirror where the door can be seen.')}</p></div>`;
+  }
+  return s;
+}
+
+// ---------- Guide ----------
+function renderGuide() {
+  const steps = [
+    ['<b>1. 載入圖則。</b>上傳戶型圖的相片或掃描檔。', '<b>1. Load the plan.</b> Upload a photo or scan of your floor plan.'],
+    ['<b>2. 定方位。</b>拖動羅盤上紅色「南」鈕，或用上方「羅盤（南）」滑桿，令羅盤對準圖則上的方位或手機指南針讀數。羅盤依傳統南方在上，以磁北為準。圖則、外框及羅盤可各自轉動。', '<b>2. Set the directions.</b> Drag the red 南 knob on the compass, or use the Compass (S) slider above the plan, until it matches the plan\'s north arrow or a phone compass reading. South sits on top as on a traditional luopan, and magnetic north is used. The plan, the outline and the compass each turn on their own.'],
+    ['<b>3. 框出房屋。</b>拖動紅色外框四邊的小方塊，貼合房屋外牆；十字線交點即屋中心「中」。拖動紅色 ⟳ 鈕可轉動外框，外框旁會顯示每面牆朝向的方位。再把「門」拖到大門，大門決定房屋的向度及宅卦。', '<b>3. Frame the house.</b> Drag the small squares on the red outline until its four lines sit on the outer walls; the cross through the middle marks the centre 中. Drag its red ⟳ knob to turn the outline; each side is labelled with the direction that wall faces. Then drag 門 to the front door, which sets the house\'s facing and its trigram.'],
+    ['<b>4. 標記窗戶、房間及家具。</b>用「+ 窗戶」及「+ 房間」，再把沙發及床拖到位置，用小圓點轉向。', '<b>4. Mark windows, rooms and furniture.</b> Use + Window and + Room, and drag the sofa and bed into place. Turn them with their small dot.'],
+    ['<b>5. 逐點分析。</b>在圖則上方選擇分析位置，由此分析每個窗戶。可按「+ 加羅盤」放置多個羅盤，例如同時放在屋中心、床及沙發，每個羅盤可各自調整大小及透明度。', '<b>5. Read from each spot.</b> Pick a target above the plan and each window is read from there. Use + Add compass to place more compasses, for example on the house centre, bed and sofa at once, each with its own size and transparency.'],
+  ];
+  const rings = [
+    ['先天八卦', '先天八卦，代表宇宙的理想秩序', 'Early Heaven trigrams, the ideal cosmic order'],
+    ['後天八卦', '後天八卦，用於陽宅；紅字為本宅卦', 'Later Heaven trigrams, the order used for houses; the house trigram is red'],
+    ['方位 · 星', '八方及本宅八宅遊星', 'Eight directions with the Eight Mansions star for this house'],
+    ['臟腑經絡', '各山對應的臟腑及經絡', 'Organ and meridian linked to each mountain'],
+    ['二十四山', '二十四山，每山 15°；紅字為陽山', '24 Mountains of 15° each; red ones are yang'],
+    ['度數', '360° 度數環，北為 0°，順時針', '360° ring, 0° at north, clockwise'],
+  ];
+  $('#pane-guide').innerHTML = `
+  <section class="block"><h2>${tr('使用方法', 'How to take a reading')}</h2>
+    <div class="list" style="gap:10px">${steps.map(s => `<p class="note">${pick(s)}</p>`).join('')}</div>
+  </section>
+  <section class="block"><h2>${tr('羅盤各層（由內至外）', 'The rings, centre outward')}</h2>
+    <dl class="kv">${rings.map(r => `<dt class="zh">${r[0]}</dt><dd>${tr(r[1], r[2])}</dd>`).join('')}</dl>
+  </section>
+  <section class="block"><h2>${tr('八宅遊星', 'Eight Mansions stars 八宅遊星')}</h2>
+    <div class="tablewrap"><table class="ref"><thead><tr><th>${tr('星', 'Star')}</th><th>${tr('含義', 'Meaning')}</th><th>${tr('宜用', 'Best use')}</th></tr></thead><tbody>
+    ${STAR_ORDER.map(k => { const st = STARS[k]; return `<tr><td>${pill(st)}<div class="note">${st.star} · ${el(st.el)}</div></td><td>${pick(st.house)}</td><td>${pick(st.use)}</td></tr>`; }).join('')}
+    </tbody></table></div>
+  </section>
+  <section class="block"><h2>${tr('後天八卦', 'Later Heaven trigrams')}</h2>
+    <div class="tablewrap"><table class="ref"><thead><tr><th>${tr('卦', 'Trigram')}</th><th>${tr('方位', 'Dir.')}</th><th>${tr('五行', 'Element')}</th><th>${tr('家人、身體', 'Family, body')}</th><th>${tr('主管', 'Life area')}</th></tr></thead><tbody>
+    ${TRI.map(T => `<tr><td><span class="zh">${T.zh}</span> ${tr(T.img[0], T.py)}<div class="note">${tr('洛書 ', T.img[1] + ' · ')}${T.num}</div></td><td>${tr(T.dirZh, T.dir)}</td><td>${el(T.el)}</td><td>${pick(T.fam)}${tr('；', '; ')}${en() ? T.body[1].toLowerCase() : T.body[0]}</td><td>${pick(T.area)}</td></tr>`).join('')}
+    </tbody></table></div>
+  </section>
+  <section class="block"><h2>${tr('關於此分析', 'About this reading')}</h2>
+    <p class="note">${tr('本工具採用八宅派：以坐山定宅卦，再為任何一點周圍的八個方位配上八顆遊星。分析窗戶時，羅盤會放在所選位置，按每個窗戶所在方位查出對應的星。此為傳統參考框架，並非健康或運程的科學量度。',
+      'This tool applies the Eight Mansions (八宅) school: the house trigram comes from its sitting direction, and each of the eight directions around a point gets one of eight stars. Window readings place the compass on the chosen target and look up the star for the direction each window lies in. It is a traditional framework for reflection, not a measurement of health or fortune.')}</p>
+  </section>`;
+}
+
+window.addEventListener('resize', fitStage);
+renderPeriodOptions(); applyStatic(); renderLayerChecks(); renderGuide(); renderLists(); showTab(); setTool(S.tool); updateDelBtn(); setupStage();
+})();
+</script>
+</body></html>
