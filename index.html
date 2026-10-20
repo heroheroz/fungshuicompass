@@ -2232,7 +2232,7 @@ const LIB = { db: null, items: [], filter: '', facing: 'all', draft: { name: '',
 // Shared gallery backend (Supabase). Set in config.js; without it the library stays local only.
 const CLOUD = window.FS_CLOUD && window.FS_CLOUD.url && window.FS_CLOUD.key ? window.FS_CLOUD : null;
 function cloudFetch(path, opts = {}) {
-  return fetch(CLOUD.url.replace(/\/$/, '') + path, { ...opts, headers: { apikey: CLOUD.key, Authorization: 'Bearer ' + CLOUD.key, ...(opts.headers || {}) } })
+  return fetch(CLOUD.url.replace(/\/$/, '') + path, { ...opts, headers: { apikey: CLOUD.key, ...(/^eyJ/.test(CLOUD.key) ? { Authorization: 'Bearer ' + CLOUD.key } : {}), ...(opts.headers || {}) } })
     .then(r => r.ok ? (r.status === 204 ? null : r.json().catch(() => null)) : r.text().then(t => { throw new Error(t || r.status); }));
 }
 const dataUrlBlob = u => fetch(u).then(r => r.blob());

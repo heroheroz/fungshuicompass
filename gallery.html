@@ -713,7 +713,7 @@ const ITEMS = {}; CHECKS.forEach(s => s.items.forEach(i => ITEMS[i.k] = i));
 const AUTO_L = { taiji: ['太極點', 'Taiji point'], door: ['大門', 'Door'], window: ['窗戶', 'Windows'], bed: ['床位', 'Bed'], sofa: ['沙發', 'Sofa'], centre: ['中宮水火', 'Centre'],
   beam: ['橫樑', 'Beams'], pillar: ['柱位', 'Pillars'], wcKitchen: ['廁廚對沖', 'Toilet vs kitchen'], doorDoor: ['門對門', 'Door to door'], dragon: ['青龍', 'Dragon'], tiger: ['白虎', 'Tiger'], tortoise: ['玄武', 'Tortoise'], bird: ['朱雀', 'Bird'], motion: ['動象', 'Movement'] };
 const avg = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length * 10) / 10 : null;
-const api = (path, opts = {}) => fetch(C.url.replace(/\/$/, '') + path, { ...opts, headers: { apikey: C.key, Authorization: 'Bearer ' + C.key, ...(opts.headers || {}) } })
+const api = (path, opts = {}) => fetch(C.url.replace(/\/$/, '') + path, { ...opts, headers: { apikey: C.key, ...(/^eyJ/.test(C.key) ? { Authorization: 'Bearer ' + C.key } : {}), ...(opts.headers || {}) } })
   .then(r => r.ok ? r.json().catch(() => null) : r.text().then(t => { throw new Error(t || r.status); }));
 const pic = p => p ? C.url.replace(/\/$/, '') + '/storage/v1/object/public/plans/' + p : '';
 const gmaps = p => p.lat != null ? `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([p.building, p.address].filter(Boolean).join(' '))}`;
