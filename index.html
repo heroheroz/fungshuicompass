@@ -46,8 +46,24 @@ body { background: var(--bg); color: var(--ink); font-family: var(--f-body); fon
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-.app { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 16px; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1600px; margin: 0 auto; }
-@media (max-width: 980px) { .app { grid-template-columns: minmax(0, 1fr); } }
+.app { display: grid; grid-template-columns: 240px minmax(0, 1fr) 400px; gap: 16px; padding-block: 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1600px; margin: 0 auto; }
+.app.hist-off { grid-template-columns: minmax(0, 1fr) 400px; }
+.app.hist-off .history { display: none; }
+@media (max-width: 1180px) { .app { grid-template-columns: 210px minmax(0, 1fr) 360px; } .app.hist-off { grid-template-columns: minmax(0, 1fr) 360px; } }
+@media (max-width: 980px) { .app, .app.hist-off { grid-template-columns: minmax(0, 1fr); } }
+.history { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; display: flex; flex-direction: column; gap: 10px; padding: 12px; align-self: start; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow-y: auto; }
+@media (max-width: 980px) { .history { position: static; max-height: 60vh; } }
+.history h2 { margin: 0; font-size: 13px; letter-spacing: .06em; color: var(--muted); }
+.hist-list { display: flex; flex-direction: column; gap: 8px; }
+.hist-item { border: 1px solid var(--line); border-radius: 8px; padding: 6px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; background: var(--bg); }
+.hist-item:hover { border-color: var(--ink); }
+.hist-item.on { border-color: var(--cinnabar); box-shadow: 0 0 0 1px var(--cinnabar) inset; }
+.hist-item img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 5px; background: #fff; }
+.hist-item b { font-size: 13px; overflow-wrap: anywhere; }
+.hist-item .note { font-size: 11.5px; }
+.hist-acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.hist-acts a, .hist-acts button { font-size: 12px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 2px 7px; text-decoration: none; color: var(--ink); cursor: pointer; }
+.hist-acts a.map { color: var(--cinnabar); }
 
 header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
 header.top .titles { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; flex: 1; min-width: 0; }
@@ -833,12 +849,13 @@ print-color-adjust: exact;
       <h1 data-i18n-html="h1"></h1>
       <p data-i18n="sub"></p>
     </div>
-    <div class="row"><a id="galleryLink" class="btn" href="gallery.html" hidden data-i18n="gallery"></a>
+    <div class="row"><button type="button" class="btn" id="histToggle" data-i18n="history"></button><a id="galleryLink" class="btn" href="gallery.html" hidden data-i18n="gallery"></a>
     <div class="group" role="group" aria-label="Language 語言">
       <button type="button" data-lang="zh" lang="zh-Hant">繁體中文</button><button type="button" data-lang="en" lang="en">English</button>
     </div></div>
   </header>
 
+  <nav class="history" id="history"></nav>
   <main class="bench">
     <div class="toolbar">
       <button class="btn primary" id="uploadBtn" type="button" data-i18n="upload"></button>
@@ -995,7 +1012,7 @@ const UI = {
   addCompass: ['+ 加羅盤', '+ Add compass'], resetView: ['↺ 全部重設', '↺ Reset all'], resetViewSure: ['再按一次確認重設', 'Click again to reset'], cmpSize: ['大小', 'Size'], cmpTrans: ['透明度', 'Transparency'],
   anchorActive: ['跟隨分析位置', 'Follows reading spot'], anchorOutline: ['外框中心', 'Outline centre'], anchorDoor: ['大門', 'Front door'],
   hint4: ['把圖片拖放到圖則上即可載入。', 'Drop an image onto the plan to load it.'],
-  tabReading: ['分析', 'Reading'], tabSetup: ['設定', 'Setup'], tabGuide: ['說明', 'Guide'], tabLibrary: ['資料庫', 'Library'], gallery: ['社群圖庫 ↗', 'Gallery ↗'],
+  tabReading: ['分析', 'Reading'], tabSetup: ['設定', 'Setup'], tabGuide: ['說明', 'Guide'], tabLibrary: ['資料庫', 'Library'], gallery: ['社群圖庫 ↗', 'Gallery ↗'], history: ['☰ 歷史紀錄', '☰ History'],
   compass: ['羅盤', 'Compass'], northPoints: ['北方指向', 'North points'], quick: ['快速設定：', 'Quick set:'],
   up: ['上', 'Up'], right: ['右', 'Right'], down: ['下', 'Down'], left: ['左', 'Left'],
   size: ['大小', 'Size'], opacity: ['透明度', 'Opacity'], style: ['樣式：', 'Style:'], light: ['淺色', 'Light'], dark: ['深色', 'Dark'],
@@ -1295,6 +1312,7 @@ function save() {
     try { localStorage.setItem(KEY, JSON.stringify(S)); }
     catch (e) { try { localStorage.setItem(KEY, JSON.stringify({ ...S, img: sampleState(S.lang).img })); } catch (e2) { /* ignore */ } }
   }, 300);
+  if (S.libId && typeof libAutosave === 'function') libAutosave();
 }
 
 // ---------- Geometry ----------
@@ -1675,7 +1693,7 @@ document.querySelectorAll('[data-lang]').forEach(b => b.addEventListener('click'
   S.windows.forEach(w => { const i = from.wins.indexOf(w.name); if (i >= 0) w.name = n.wins[i]; });
   S.lang = to; save(); refreshLanguage();
 }));
-function refreshLanguage() { if (S.tab === 'library') renderLibrary(); renderPeriodOptions(); applyStatic(); renderLayerChecks(); renderLists(); renderGuide(); drawDynamic(); }
+function refreshLanguage() { renderHistory(); if (S.tab === 'library') renderLibrary(); renderPeriodOptions(); applyStatic(); renderLayerChecks(); renderLists(); renderGuide(); drawDynamic(); }
 
 // Upload
 function loadFile(file) {
@@ -1696,6 +1714,7 @@ function loadFile(file) {
       S.img = { src: fr.result, w, h, sample: false };
       S.frame = defaultFrame(S.img); S.imgRot = 0; S.libId = null; S.manual = {};
       renderLists(); setupStage(); save();
+      caseFromUpload(file);
     };
     im.src = fr.result;
   };
@@ -2260,6 +2279,78 @@ function cloudShare(it) {
     .then(rows => rows && rows[0] && rows[0].id);
 }
 $('#galleryLink').hidden = !CLOUD;
+function cloudBackup(it, kind, file) {
+  // private backup of every case: original upload and each save, kept in the "uploads" bucket and "cases" table
+  if (!CLOUD) return Promise.resolve(false);
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+  const dir = `${new Date().toISOString().slice(0, 7)}/${it.id}`, put = (path, blob, type) => cloudFetch(`/storage/v1/object/uploads/${path}`, { method: 'POST', headers: { 'Content-Type': type, 'x-upsert': 'false' }, body: blob });
+  const ext = file && (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5);
+  const orig = file ? `${dir}/${uid()}-original.${ext || 'img'}` : null, snap = `${dir}/${uid()}-compass.jpg`;
+  const { img: _i, ...layout } = it.state;
+  return (file ? put(orig, file, file.type || 'application/octet-stream') : Promise.resolve())
+    .then(() => dataUrlBlob(it.thumb)).then(b => put(snap, b, 'image/jpeg'))
+    .then(() => cloudFetch('/rest/v1/cases', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ case_id: it.id, kind, file_name: file ? file.name.slice(0, 200) : null, original_path: orig, snapshot_path: snap,
+        building: it.name || null, block: it.block || null, floor: it.floor || null, unit: it.unit || null, address: it.address || null, lat: it.lat, lng: it.lng,
+        facing: it.facing, label: it.label, school: it.school, period: it.period, score: it.score, layout }) }))
+    .then(() => true, () => false);
+}
+function libRecord(id, meta, thumb) {
+  const prev = LIB.items.find(i => i.id === id), now = Date.now(), A = assess();
+  return { ...(prev || {}), id, created: prev ? prev.created : now, updated: now, ...JSON.parse(JSON.stringify(meta)), name: (meta.name || '').trim(), ...facingInfo(), school: S.school, period: S.period, thumb,
+    state: JSON.parse(JSON.stringify({ ...S, tool: 'move', selected: null, libId: id })),
+    score: A.overall, assessment: Object.fromEntries(A.items.filter(i => i.score != null).map(i => [i.k, { s: i.score, v: i.v || null, auto: i.auto }])) };
+}
+function caseFromUpload(file) {
+  // every uploaded plan becomes a case in the history, backed up to the cloud
+  const id = 'p' + Date.now().toString(36);
+  LIB.draft = { name: file.name.replace(/\.[^.]+$/, '').slice(0, 80), block: '', floor: '', unit: '', address: '', lat: null, lng: null, notes: '', author: LIB.draft.author || '' };
+  LIB.draftFor = id; S.libId = id; save();
+  setTimeout(() => snapshot().then(thumb => {
+    const it = libRecord(id, LIB.draft, thumb);
+    return libTx('readwrite', st => st.put(it)).then(libLoad).then(() => { renderHistory(); if (S.tab === 'library') renderLibrary(); return cloudBackup(it, 'upload', file); })
+      .then(ok => { if (ok) { it.backedUp = true; return libTx('readwrite', st => st.put(it)).then(libLoad).then(renderHistory); } });
+  }).catch(() => {}), 400);
+}
+let autoT;
+function libAutosave() {
+  // keeps the open case's picture and settings current as you work
+  clearTimeout(autoT);
+  autoT = setTimeout(() => {
+    const prev = S.libId && LIB.items.find(i => i.id === S.libId); if (!prev || drag) return;
+    const meta = LIB.draftFor === prev.id ? LIB.draft : prev;
+    snapshot().then(thumb => libTx('readwrite', st => st.put(libRecord(prev.id, meta, thumb)))).then(libLoad).then(renderHistory).catch(() => {});
+  }, 2500);
+}
+let histQ = '';
+function renderHistory() {
+  const el = $('#history'); if (!el) return;
+  const q = histQ.trim().toLowerCase(), list = LIB.items.filter(it => !q || [it.name, it.block, it.floor, it.unit, it.address].join(' ').toLowerCase().includes(q));
+  el.innerHTML = `<div class="row" style="justify-content:space-between"><h2>${tr('歷史紀錄', 'History')} <span class="note">${LIB.items.length}</span></h2><button type="button" class="linkish" data-histclose="1">${tr('收起', 'Hide')}</button></div>
+    <button type="button" class="btn primary" data-histnew="1">${tr('+ 上載新戶型', '+ Upload a plan')}</button>
+    <input type="text" id="histQ" value="${esc(histQ)}" placeholder="${tr('搜尋大廈、單位…', 'Search building, unit…')}">
+    <p class="note" style="margin:0">${CLOUD ? tr('每次上載及儲存都會備份到雲端。', 'Every upload and save is backed up to the cloud.') : tr('紀錄存喺呢部機。', 'Cases are kept on this device.')}</p>
+    <div class="hist-list">${list.length ? list.map(it => `<div class="hist-item${it.id === S.libId ? ' on' : ''}" data-libopen="${it.id}">
+      <img src="${it.thumb}" alt="">
+      <b>${esc(it.name || tr('未命名', 'Untitled'))}</b>
+      ${libUnitText(it) ? `<span class="note">${esc(libUnitText(it))}</span>` : ''}
+      <span class="note">${esc(S.lang === 'en' ? it.labelEn : it.label)}${it.score != null ? ` · <span style="color:#b8860b">${starTxt(it.score)}</span>` : ''}</span>
+      <span class="note">${new Date(it.updated).toLocaleString(S.lang === 'en' ? 'en-GB' : 'zh-HK', { dateStyle: 'medium', timeStyle: 'short' })}${CLOUD ? (it.backedUp ? ' · ☁︎' : '') : ''}</span>
+      <span class="hist-acts">${it.lat != null || it.address ? `<a class="map" href="${gmapsUrl(it)}" target="_blank" rel="noopener">📍 Google Maps</a>` : `<button type="button" data-histloc="${it.id}">📍 ${tr('加位置', 'Add location')}</button>`}</span>
+    </div>`).join('') : `<p class="note">${LIB.items.length ? tr('冇符合嘅紀錄。', 'No matches.') : tr('上載戶型圖之後會自動喺度出現。', 'Uploaded plans appear here automatically.')}</p>`}</div>`;
+}
+$('#history').addEventListener('input', e => { if (e.target.id === 'histQ') { histQ = e.target.value; const pos = e.target.selectionStart; renderHistory(); const q = $('#histQ'); q.focus(); q.setSelectionRange(pos, pos); } });
+$('#history').addEventListener('click', e => {
+  if (e.target.closest('a')) { e.stopPropagation(); return; }
+  if (e.target.closest('[data-histnew]')) $('#fileIn').click();
+  if (e.target.closest('[data-histclose]')) setHist(false);
+  const l = e.target.closest('[data-histloc]'); if (l) { e.stopPropagation(); libOpen(l.dataset.histloc); S.tab = 'library'; showTab(); save(); setTimeout(() => { const a = $('#libAddr'); if (a) a.focus(); }, 300); }
+}, true);
+function setHist(on) {
+  S.histOn = on; $('.app').classList.toggle('hist-off', !on); save();
+  if (on) renderHistory(); setTimeout(fitStage, 30);
+}
+$('#histToggle').addEventListener('click', () => setHist($('.app').classList.contains('hist-off')));
 const galleryUrl = id => 'gallery.html' + (id ? '#' + id : '');
 function libDB() {
   if (LIB.db) return Promise.resolve(LIB.db);
@@ -2309,6 +2400,7 @@ function parseLatLng(s) {
 }
 function libSetPoint(lat, lng) {
   LIB.draft.lat = Math.round(lat * 1e6) / 1e6; LIB.draft.lng = Math.round(lng * 1e6) / 1e6;
+  if (S.libId && LIB.draftFor === S.libId) libAutosave();
   renderLibPoint(); libMapDraw();
   if (LIB.map) LIB.map.setView([lat, lng], Math.max(LIB.map.getZoom(), 17));
 }
@@ -2423,26 +2515,28 @@ function libSave(mode, share) {
   const d = LIB.draft, msg = $('#libMsg');
   if (!d.name.trim()) { msg.textContent = tr('請先填大廈／屋苑名稱。', 'Please enter the building or estate name.'); $('[data-libf="name"]').focus(); return; }
   msg.textContent = tr('儲存中…', 'Saving…');
-  const fi = facingInfo(), now = Date.now(), id = mode === 'update' && S.libId ? S.libId : 'p' + now.toString(36);
-  const prev = LIB.items.find(i => i.id === id);
+  const id = mode === 'update' && S.libId ? S.libId : 'p' + Date.now().toString(36);
   snapshot().then(thumb => {
-    const state = JSON.parse(JSON.stringify({ ...S, tool: 'move', selected: null, libId: id }));
-    const it = { id, created: prev ? prev.created : now, updated: now, ...JSON.parse(JSON.stringify(d)), name: d.name.trim(), ...fi, school: S.school, period: S.period, thumb, state, cloudId: prev ? prev.cloudId : undefined, ...(() => { const A = assess(); return { score: A.overall, assessment: Object.fromEntries(A.items.filter(i => i.score != null).map(i => [i.k, { s: i.score, v: i.v || null, auto: i.auto }])) }; })() };
+    const it = libRecord(id, d, thumb);
+    if (mode !== 'update') delete it.cloudId;
+    LIB.draftFor = id;
     return libTx('readwrite', st => st.put(it)).then(() => { S.libId = id; save(); return it; });
-  }).then(it => {
+  }).then(it => cloudBackup(it, 'save').then(ok => { if (ok) { it.backedUp = true; return libTx('readwrite', st => st.put(it)).then(() => it); } return it; }))
+  .then(it => {
     if (!share || !CLOUD) return libLoad().then(() => tr('已儲存喺本機。', 'Saved on this device.'));
     msg.textContent = tr('上載中…', 'Uploading…');
     return cloudShare(it).then(cid => { it.cloudId = cid; return libTx('readwrite', st => st.put(it)); })
       .then(libLoad).then(() => tr('已儲存並分享到社群。', 'Saved and shared to the gallery.'))
       .catch(() => libLoad().then(() => tr('已儲存喺本機，但上載失敗，請稍後再試。', 'Saved on this device, but the upload failed. Please try again later.')));
-  }).then(t => { renderLibrary(); const m = $('#libMsg'); if (m) m.textContent = t; })
+  }).then(t => { renderLibrary(); renderHistory(); const m = $('#libMsg'); if (m) m.textContent = t; })
     .catch(() => { msg.textContent = tr('儲存失敗。', 'Could not save.'); });
 }
 function libOpen(id) {
   const it = LIB.items.find(i => i.id === id); if (!it) return;
-  const keep = { lang: S.lang, tab: 'reading' };
+  const keep = { lang: S.lang, tab: 'reading', histOn: S.histOn };
   S = Object.assign(sampleState(S.lang), it.state, keep, { libId: id });
   Object.assign(LIB.draft, { name: it.name, block: it.block || '', floor: it.floor || '', unit: it.unit || '', address: it.address || '', lat: it.lat, lng: it.lng, notes: it.notes || '' });
+  LIB.draftFor = id; renderHistory();
   renderLists(); renderCompassList(); setupStage(); syncControls(); showTab(); save();
   if (LIB.map) LIB.map.closePopup();
 }
@@ -2450,7 +2544,7 @@ document.addEventListener('click', e => {
   const o = e.target.closest('[data-libopen]'); if (o) { e.preventDefault(); libOpen(o.dataset.libopen); }
 });
 $('#pane-library').addEventListener('input', e => {
-  const f = e.target.dataset.libf; if (f) { LIB.draft[f] = e.target.value; return; }
+  const f = e.target.dataset.libf; if (f) { LIB.draft[f] = e.target.value; if (S.libId && LIB.draftFor === S.libId) libAutosave(); return; }
   if (e.target.id === 'libQ') { LIB.filter = e.target.value; renderLibList(); libMapDraw(); }
 });
 $('#pane-library').addEventListener('change', e => { if (e.target.id === 'libFacing') { LIB.facing = e.target.value; renderLibList(); libMapDraw(true); }
@@ -2523,6 +2617,9 @@ function renderGuide() {
 
 window.addEventListener('resize', fitStage);
 renderPeriodOptions(); applyStatic(); renderLayerChecks(); renderGuide(); renderLists(); showTab(); setTool(S.tool); updateDelBtn(); setupStage();
+if (S.histOn === false) $('.app').classList.add('hist-off');
+else if (window.innerWidth <= 980 && S.histOn == null) { $('.app').classList.add('hist-off'); }
+libLoad().then(() => { const it = S.libId && LIB.items.find(i => i.id === S.libId); if (it) { Object.assign(LIB.draft, { name: it.name, block: it.block || '', floor: it.floor || '', unit: it.unit || '', address: it.address || '', lat: it.lat, lng: it.lng, notes: it.notes || '' }); LIB.draftFor = it.id; } renderHistory(); });
 })();
 </script>
 </body></html>

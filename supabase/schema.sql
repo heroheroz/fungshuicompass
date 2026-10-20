@@ -85,3 +85,37 @@ on conflict (id) do update set public = true, file_size_limit = 3145728, allowed
 drop policy if exists "upload plan pictures" on storage.objects;
 create policy "upload plan pictures" on storage.objects for insert to anon, authenticated
   with check (bucket_id = 'plans');
+
+-- ---------- Private backup of every case ----------
+-- Each upload and each save adds a row; the website can add rows but never read them back.
+-- Browse them in the Supabase dashboard (Table Editor → cases, Storage → uploads).
+create table if not exists public.cases (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  case_id text not null check (char_length(case_id) <= 40),
+  kind text not null check (kind in ('upload', 'save')),
+  file_name text check (char_length(file_name) <= 200),
+  original_path text check (char_length(original_path) <= 200),
+  snapshot_path text check (char_length(snapshot_path) <= 200),
+  building text check (char_length(building) <= 120),
+  block text check (char_length(block) <= 40),
+  floor text check (char_length(floor) <= 40),
+  unit text check (char_length(unit) <= 40),
+  address text check (char_length(address) <= 300),
+  lat double precision, lng double precision,
+  facing double precision, label text check (char_length(label) <= 40),
+  school text, period smallint, score numeric(2,1),
+  layout jsonb
+);
+create index if not exists cases_case on public.cases(case_id, created_at);
+alter table public.cases enable row level security;
+drop policy if exists "add cases" on public.cases;
+create policy "add cases" on public.cases for insert to anon, authenticated with check (true);
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('uploads', 'uploads', false, 15728640, array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif', 'image/bmp'])
+on conflict (id) do update set public = false, file_size_limit = 15728640;
+
+drop policy if exists "upload case files" on storage.objects;
+create policy "upload case files" on storage.objects for insert to anon, authenticated
+  with check (bucket_id = 'uploads');
